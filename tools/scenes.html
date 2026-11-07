@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Сцены</title>
+<style>body{margin:0;background:#10204f;font:13px system-ui;color:#fff}.row{display:flex;gap:8px;padding:6px}svg{width:400px;height:340px;background:#fff;border-radius:8px}</style></head><body><div id="o"></div>
+<script src="../src/js/art.js"></script><script src="../src/js/levels.js"></script>
+<script>
+var q=new URLSearchParams(location.search);var from=+(q.get('from')||1),n=+(q.get('n')||6),marks=q.get('marks')==='1';
+var o=document.getElementById('o');
+for(var l=from;l<from+n;l++){var L=LEVELS.build(l);var m=marks?L.diffs.map(function(d){return '<circle cx="'+d.x+'" cy="'+d.y+'" r="'+d.r+'" fill="none" stroke="#f0f" stroke-width="3"/>'}).join(''):'';
+o.insertAdjacentHTML('beforeend','<div>Уровень '+l+' — '+L.scene.name+' — '+L.diffs.map(function(d){return L.left[d.idx].type+':'+d.kind}).join(', ')+'</div><div class="row"><svg viewBox="0 0 400 340">'+LEVELS.renderSide(L.scene,L.left)+m+'</svg><svg viewBox="0 0 400 340">'+LEVELS.renderSide(L.scene,L.right)+m+'</svg></div>');}
+</script></body></html>
