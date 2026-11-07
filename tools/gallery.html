@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Галерея предметов</title>
+<style>body{margin:0;background:#1b2d6b;font:14px system-ui;color:#fff}.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:8px}.cell{background:#f6f1e7;border-radius:10px;text-align:center;color:#1d2b5c}.cell svg{width:100%;height:auto;display:block}</style></head>
+<body><div class="grid" id="g"></div>
+<script src="../src/js/art.js"></script>
+<script>
+var q=new URLSearchParams(location.search);var off=q.get('off')==='1';
+var g=document.getElementById('g');
+Object.keys(ART.ITEMS).forEach(function(k){var sp=ART.ITEMS[k];var d={};sp.details.forEach(function(x){d[x]=!off});
+var s=Math.min(1,100/Math.max(sp.w,sp.h));
+var div=document.createElement('div');div.className='cell';
+div.innerHTML='<svg viewBox="-60 -60 120 120">'+ART.render({type:k,x:0,y:0,s:s,d:d,c:off?sp.colors[1]||sp.colors[0]:null})+'</svg>'+k;g.appendChild(div);});
+</script></body></html>
