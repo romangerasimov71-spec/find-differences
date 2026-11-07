@@ -1,0 +1,23 @@
+{
+  "name": "find-differences",
+  "version": "1.0.0",
+  "description": "Уютная головоломка «найди отличия» для VK Игр (и Одноклассников): две почти одинаковые новогодние картинки, игрок тапает по местам, где они различаются. Вся графика — SVG в коде, без внешних картинок и сервисов.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romangerasimov71-spec/find-differences.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/romangerasimov71-spec/find-differences/issues"
+  },
+  "homepage": "https://github.com/romangerasimov71-spec/find-differences#readme",
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

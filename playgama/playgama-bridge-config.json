@@ -1,0 +1,14 @@
+{
+    "advertisement": {
+        "interstitial": {
+            "preloadOnStart": "level_completed",
+            "placementFallback": "level_completed",
+            "placements": [{ "id": "level_completed" }]
+        },
+        "rewarded": {
+            "preloadOnStart": "hint",
+            "placementFallback": "hint",
+            "placements": [{ "id": "hint" }, { "id": "continue" }, { "id": "gift_x2" }]
+        }
+    }
+}

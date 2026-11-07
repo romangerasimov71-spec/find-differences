@@ -252,6 +252,7 @@
   function startLevel(n) {
     var c = cache && cache.n === n ? cache : prepare(n);
     cache = null;
+    clearTimeout(fingerTimer); $('finger').hidden = true; fingerTarget = -1;
     var lv = c.lv;
     G = { n: n, lv: lv, found: {}, count: 0, miss: 0, hearts: CFG.hearts, done: false, lastTap: 0, lastX: 0, lastY: 0 };
     save.last = n; persist();
