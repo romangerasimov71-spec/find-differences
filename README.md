@@ -50,7 +50,6 @@ python3 tools/make-audio.py <src>  # пересобрать звуки из CC0-
 ```
 
 ## Публикация
-- VK/OK (ID 54882213): `./build.sh && npx @vkontakte/vk-miniapps-deploy` — заливает `dist/vk` на хостинг VK
-  (конфиг `vk-hosting-config.json`), адреса для приложения, веба и m.vk прописываются сами. Нужна разовая
-  авторизация по ссылке, которую печатает команда. Копия сборки также в ветке `gh-pages` (GitHub Pages).
+- VK/OK (ID 54882213): в «Размещении» VK стоит GitHub Pages `https://romangerasimov71-spec.github.io/find-differences/`.
+  **После любого изменения игры:** `./tools/deploy-pages.sh` — сборка с автотестом и выкладка `dist/vk` в ветку `gh-pages`.
 - Playgama: `dist/find-differences-playgama.zip` загружается через коннектор Playgama; песочница https://playgama.ai/play/uzg3wlsfutoeia
