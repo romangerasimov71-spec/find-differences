@@ -200,7 +200,7 @@
       if (sp.details.length) opts.push('detail', 'detail', 'detail');
       if (farColors(sp.colors, b.c).length) opts.push('color', 'color');
       if (sp.colors2 && farColors(sp.colors2, b.c2).length) opts.push('color2');
-      if (Math.max(sp.w, sp.h) * b.s < 120) opts.push('remove', 'remove');
+      if (size < 95) opts.push('remove', 'remove');
       if (sp.flip) opts.push('flip');
       if (!opts.length) continue;
       var kind = pick(R, opts);

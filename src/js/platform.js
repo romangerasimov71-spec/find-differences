@@ -38,7 +38,6 @@
     if (document.hidden) emitHide(); else emitShow();
   });
   window.addEventListener('pagehide', emitHide);
-  window.addEventListener('blur', function () { /* фокус может уходить в окно рекламы — не реагируем */ });
 
   if (inVK) {
     bridge.subscribe(function (e) {
@@ -86,6 +85,12 @@
 
   /* ---------- Реклама ---------- */
   var adShowing = false;
+  // VKWebAppCheckNativeAds заранее подгружает рекламу — вызываем его после запуска и после каждого показа
+  function preload(format) {
+    if (!inVK) return;
+    send('VKWebAppCheckNativeAds', format === 'reward' ? { ad_format: format, use_waterfall: true } : { ad_format: format }).catch(function () {});
+  }
+  initPromise.then(function () { setTimeout(function () { preload('interstitial'); preload('reward'); }, 1500); });
   var adStartHandlers = [], adEndHandlers = [];
 
   function showAd(format) {
@@ -103,6 +108,7 @@
       .then(function (ok) {
         adShowing = false;
         adEndHandlers.forEach(function (f) { f(); });
+        setTimeout(function () { preload(format); }, 1000);
         return ok;
       });
   }
