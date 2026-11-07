@@ -143,6 +143,7 @@
     $('found').innerHTML = dots;
     updateHintBadge();
     show('scr-game');
+    if (n === 1 && !save.stars[1]) setTimeout(function () { toast('Найдите ' + lv.diffs.length + ' отличия — нажмите на них на любой картинке'); }, 400);
     // зоны попадания — по реальной рамке предмета на той картинке, где он нарисован
     G.boxes = lv.diffs.map(function (d) {
       var el = picA.querySelector('[data-i="' + d.idx + '"]') || picB.querySelector('[data-i="' + d.idx + '"]');
@@ -207,6 +208,17 @@
       '<ellipse cx="' + b.cx + '" cy="' + b.cy + '" rx="' + rx + '" ry="' + ry + '" fill="none" stroke="' + color + '" stroke-width="4.5"/></g>';
   }
 
+  // искорки-звёздочки, разлетающиеся от найденного отличия
+  function sparkles(b) {
+    var out = '<g class="sparks">', n = 6;
+    for (var k = 0; k < n; k++) {
+      var a = k / n * Math.PI * 2 + 0.3, dist = Math.max(30, Math.min(b.w, b.h) / 2 + 22);
+      var dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
+      out += '<g style="--dx:' + dx.toFixed(1) + 'px;--dy:' + dy.toFixed(1) + 'px"><polygon class="spark" points="' + A.starPts(b.cx, b.cy, 12, 5) + '" fill="' + (k % 2 ? '#fff' : A.PAL.gold) + '" stroke="' + OUT + '" stroke-width="2"/></g>';
+    }
+    return out + '</g>';
+  }
+
   function onTap(ev) {
     if (!G || G.done || anyModal()) return;
     S.unlock();
@@ -218,7 +230,7 @@
       G.found[i] = true; G.foundCount++;
       document.querySelectorAll('.pic .marks .mark-hint').forEach(function (m) { m.remove(); });
       ['pic-a', 'pic-b'].forEach(function (id) {
-        $(id).querySelector('.marks').insertAdjacentHTML('beforeend', ringFor(G.boxes[i], 'mark-found', A.PAL.gold));
+        $(id).querySelector('.marks').insertAdjacentHTML('beforeend', ringFor(G.boxes[i], 'mark-found', A.PAL.gold) + sparkles(G.boxes[i]));
       });
       var dots = $('found').children; dots[G.foundCount - 1].classList.add('on');
       S.play('found'); P.haptic('success');

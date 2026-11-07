@@ -147,6 +147,8 @@ button { font-family: inherit; }
 @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .mark-found { animation: markIn .4s cubic-bezier(.2,1.6,.4,1) both; transform-box: fill-box; transform-origin: center; }
 @keyframes markIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.spark { animation: spark .8s ease-out forwards; transform-box: fill-box; transform-origin: center; }
+@keyframes spark { 0% { transform: translate(0, 0) scale(.4); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg); opacity: 0; } }
 .mark-miss { animation: missOut .9s ease-out forwards; transform-box: fill-box; transform-origin: center; }
 @keyframes missOut { 0% { transform: scale(.4); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 70% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 .mark-hint { animation: hintPulse .8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
