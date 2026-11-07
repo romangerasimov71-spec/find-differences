@@ -623,6 +623,9 @@
   on('btn-audio', openSound); on('btn-audio-map', openSound); on('btn-audio-game', openSound);
   on('btn-sound-ok', function () { modal('modal-sound', false); });
   $('modal-sound').addEventListener('click', function (e) { if (e.target === this) modal('modal-sound', false); });
+  document.addEventListener('keydown', function (e) { // пауза — P (на русской раскладке З); Esc не используется
+    if ((e.code === 'KeyP' || /^[pPзЗ]$/.test(e.key)) && current === 'scr-game' && G && !G.done && !anyModal()) { modal('modal-pause', true); if (P.levelEvent) P.levelEvent('level_paused', G.n); }
+  });
   document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   document.addEventListener('dblclick', function (e) { e.preventDefault(); });

@@ -85,7 +85,9 @@
 - Награда за rewarded выдаётся только в состоянии `rewarded`. Кнопки рекламы скрываются, если `isRewardedSupported = false`.
 - `game_ready` — когда показано меню. Кнопки «Друзья» и «Поделиться» в этой сборке скрыты; сборка проверяется
   на отсутствие упоминаний VK/OK (`build.sh` падает, если найдёт).
-- Звуки настоящие (CC0), архив `dist/find-differences-playgama.zip` готов к загрузке.
+- Загружено через коннектор: игра `cmw6bhwjx0ebxno0hb68dkkzf` «Spot the Difference: New Year», категория puzzle,
+  EN+RU, телефоны и компьютер, distributeEverywhere включён. Сборка 1.1.0 прошла проверку (Bridge 2.4.1),
+  песочница: https://playgama.ai/play/uzg3wlsfutoeia. После каждой новой сборки — повторная сертификация в QA Tool.
 
 ## Звук
 - Только файлы: `src/assets/sfx/*.ogg|mp3`, `src/assets/music/winter.ogg|mp3`, все CC0 (источники — `src/assets/CREDITS.txt`).
