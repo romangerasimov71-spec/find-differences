@@ -1,143 +1,138 @@
-/* Платформенный слой: VK Bridge с таймаутами + сохранения + реклама.
-   Вне VK (обычный браузер) всё работает через localStorage, реклама «не доступна». */
+/* Платформенный слой для VK и Одноклассников (и обычного браузера).
+   Все вызовы VK Bridge — с таймаутом: вне VK/OK игра не зависает.
+   Интерфейс window.Platform одинаков для всех сборок (см. platform-playgama.js). */
 (function () {
   'use strict';
-
-  var BRIDGE_TIMEOUT = 2500;
-  var AD_TIMEOUT = 30000; // показ рекламы может длиться долго — ждём дольше
-  var SAVE_KEY = 'fd_ny_progress_v1';
-
+  var BRIDGE_TIMEOUT = 2500, AD_TIMEOUT = 45000;
   var bridge = window.vkBridge || null;
-  var params = new URLSearchParams(location.search);
-  var inVK = !!(bridge && (params.has('vk_app_id') || params.has('vk_platform') || params.has('sign')));
-  var isOK = params.get('vk_client') === 'ok' || /_ok$/.test(params.get('vk_platform') || '');
+  var q = new URLSearchParams(location.search);
+  var vkPlatform = q.get('vk_platform') || '';
+  var isOK = q.get('vk_client') === 'ok' || /_ok$/.test(vkPlatform);
+  var inBridge = !!(bridge && (q.has('vk_app_id') || q.has('vk_platform') || q.has('sign')));
+  var id = inBridge ? (isOK ? 'ok' : 'vk') : 'web';
+  var SAVE_KEY = id === 'ok' ? 'fd_ny_ok_v2' : id === 'vk' ? 'fd_ny_vk_v2' : 'fd_ny_web_v2'; // сохранения VK и OK раздельные
 
-  function withTimeout(promise, ms) {
-    return new Promise(function (resolve, reject) {
-      var done = false;
-      var t = setTimeout(function () { if (!done) { done = true; reject(new Error('timeout')); } }, ms);
-      promise.then(function (v) { if (!done) { done = true; clearTimeout(t); resolve(v); } },
-                   function (e) { if (!done) { done = true; clearTimeout(t); reject(e); } });
+  function withTimeout(p, ms) {
+    return new Promise(function (res, rej) {
+      var done = false, t = setTimeout(function () { if (!done) { done = true; rej(new Error('timeout')); } }, ms);
+      p.then(function (v) { if (!done) { done = true; clearTimeout(t); res(v); } }, function (e) { if (!done) { done = true; clearTimeout(t); rej(e); } });
     });
   }
-
   function send(method, data, ms) {
-    if (!inVK) return Promise.reject(new Error('no-bridge'));
-    try {
-      return withTimeout(bridge.send(method, data || {}), ms || BRIDGE_TIMEOUT);
-    } catch (e) { return Promise.reject(e); }
+    if (!inBridge) return Promise.reject(new Error('no-bridge'));
+    try { return withTimeout(bridge.send(method, data || {}), ms || BRIDGE_TIMEOUT); } catch (e) { return Promise.reject(e); }
   }
 
-  /* ---------- События жизненного цикла ---------- */
-  var hideHandlers = [], showHandlers = [];
-  var hidden = false;
-  function emitHide() { if (hidden) return; hidden = true; hideHandlers.forEach(function (f) { f(); }); }
-  function emitShow() { if (!hidden) return; hidden = false; showHandlers.forEach(function (f) { f(); }); }
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) emitHide(); else emitShow();
-  });
-  window.addEventListener('pagehide', emitHide);
-
-  if (inVK) {
+  /* ---------- Пауза / возврат ---------- */
+  var pauseFns = [], resumeFns = [], hidden = false;
+  function hide() { if (hidden) return; hidden = true; pauseFns.forEach(function (f) { f('hide'); }); }
+  function show() { if (!hidden) return; hidden = false; resumeFns.forEach(function (f) { f('show'); }); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) hide(); else show(); });
+  window.addEventListener('pagehide', hide);
+  window.addEventListener('pageshow', function () { if (!document.hidden) show(); });
+  if (inBridge && !isOK) { // в OK событий ViewHide/Restore нет — там хватает visibilitychange
     bridge.subscribe(function (e) {
-      var type = e && e.detail && e.detail.type;
-      if (type === 'VKWebAppViewHide') emitHide();
-      else if (type === 'VKWebAppViewRestore') emitShow();
+      var t = e && e.detail && e.detail.type;
+      if (t === 'VKWebAppViewHide') hide(); else if (t === 'VKWebAppViewRestore') show();
     });
   }
 
-  /* ---------- Инициализация ---------- */
-  var initPromise = inVK ? send('VKWebAppInit', {}).catch(function () {}) : Promise.resolve();
+  var ready = inBridge ? send('VKWebAppInit', {}).catch(function () {}) : Promise.resolve();
 
-  /* ---------- Сохранения ---------- */
-  function localLoad() {
-    try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
-  }
-  function localSave(obj) {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(obj)); } catch (e) {}
-  }
-
+  /* ---------- Сохранения: VK Storage + запасной localStorage ---------- */
+  function lsGet() { try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  function lsSet(o) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(o)); } catch (e) {} }
   function load() {
-    var local = localLoad();
-    if (!inVK) return Promise.resolve({ local: local, cloud: null });
+    var local = lsGet();
+    if (!inBridge) return Promise.resolve([local]);
     return send('VKWebAppStorageGet', { keys: [SAVE_KEY] }).then(function (r) {
-      var v = r && r.keys && r.keys[0] && r.keys[0].value;
-      var cloud = null;
+      var v = r && r.keys && r.keys[0] && r.keys[0].value, cloud = null;
       if (v) { try { cloud = JSON.parse(v); } catch (e) {} }
-      return { local: local, cloud: cloud };
-    }).catch(function () { return { local: local, cloud: null }; });
+      return [local, cloud];
+    }).catch(function () { return [local]; });
   }
-
   var saveTimer = null, pending = null;
-  function save(obj) {
-    localSave(obj);
-    if (!inVK) return;
-    pending = obj;
-    clearTimeout(saveTimer);
-    // склеиваем частые записи, VK Storage ограничен по частоте
+  function save(o) {
+    lsSet(o);
+    if (!inBridge) return;
+    pending = o; clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      var data = JSON.stringify(pending);
-      if (data.length > 4096) return; // лимит значения VK Storage
-      send('VKWebAppStorageSet', { key: SAVE_KEY, value: data }).catch(function () {});
-    }, 800);
+      var s = JSON.stringify(pending);
+      if (s.length <= 4096) send('VKWebAppStorageSet', { key: SAVE_KEY, value: s }).catch(function () {});
+    }, 700);
   }
 
   /* ---------- Реклама ---------- */
-  var adShowing = false;
-  // VKWebAppCheckNativeAds заранее подгружает рекламу — вызываем его после запуска и после каждого показа
-  function preload(format) {
-    if (!inVK) return;
-    send('VKWebAppCheckNativeAds', format === 'reward' ? { ad_format: format, use_waterfall: true } : { ad_format: format }).catch(function () {});
-  }
-  initPromise.then(function () { setTimeout(function () { preload('interstitial'); preload('reward'); }, 1500); });
-  var adStartHandlers = [], adEndHandlers = [];
+  var adBusy = false;
+  function adStart() { pauseFns.forEach(function (f) { f('ad'); }); }
+  function adEnd() { resumeFns.forEach(function (f) { f('ad'); }); }
+  function preload(fmt) { if (inBridge) send('VKWebAppCheckNativeAds', fmt === 'reward' ? { ad_format: fmt, use_waterfall: true } : { ad_format: fmt }).catch(function () {}); }
+  ready.then(function () { setTimeout(function () { preload('interstitial'); preload('reward'); }, 1200); });
 
-  function showAd(format) {
-    if (!inVK || adShowing) return Promise.resolve(false);
-    adShowing = true;
-    adStartHandlers.forEach(function (f) { f(); });
-    var useWf = format === 'reward' ? { use_waterfall: true } : {};
-    var req = Object.assign({ ad_format: format }, useWf);
-    return send('VKWebAppCheckNativeAds', req)
-      .then(function (r) {
+  // Заглушка рекламы вне VK/OK: 2 секунды, потом «награда»
+  function stubAd() {
+    return new Promise(function (res) {
+      var el = document.getElementById('ad-stub');
+      if (!el) { res(true); return; }
+      el.classList.add('show');
+      setTimeout(function () { el.classList.remove('show'); res(true); }, 2000);
+    });
+  }
+  function showAd(fmt) {
+    if (adBusy) return Promise.resolve(false);
+    adBusy = true; adStart();
+    var req = fmt === 'reward' ? { ad_format: fmt, use_waterfall: true } : { ad_format: fmt };
+    var p = !inBridge ? stubAd() :
+      send('VKWebAppCheckNativeAds', req).then(function (r) {
         if (!r || !r.result) return false;
-        return send('VKWebAppShowNativeAds', req, AD_TIMEOUT).then(function (res) { return !!(res && res.result); });
-      })
-      .catch(function () { return false; })
-      .then(function (ok) {
-        adShowing = false;
-        adEndHandlers.forEach(function (f) { f(); });
-        setTimeout(function () { preload(format); }, 1000);
-        return ok;
-      });
+        return send('VKWebAppShowNativeAds', req, AD_TIMEOUT).then(function (x) { return !!(x && x.result); });
+      }).catch(function () { return false; });
+    return p.then(function (ok) {
+      adBusy = false; adEnd();
+      setTimeout(function () { preload(fmt); }, 800);
+      return ok;
+    });
   }
 
-  function haptic(kind) {
-    if (inVK) {
-      if (kind === 'success') send('VKWebAppTapticNotificationOccurred', { type: 'success' }).catch(function () {});
-      else if (kind === 'error') send('VKWebAppTapticNotificationOccurred', { type: 'error' }).catch(function () {});
-      else send('VKWebAppTapticImpactOccurred', { style: 'light' }).catch(function () {});
-    } else if (navigator.vibrate) {
-      try { navigator.vibrate(kind === 'error' ? 40 : 12); } catch (e) {}
+  /* ---------- Рост ---------- */
+  var storyUrl = null;
+  try { storyUrl = new URL('share/story.png', location.href).href; } catch (e) {}
+  var social = {
+    invite: function (msg) { return send('VKWebAppShowInviteBox', isOK ? { message: msg } : {}, 60000).then(function () { return true; }, function () { return false; }); },
+    // VK: пост на стену; OK: VKWebAppShare (ShowWallPostBox в OK нет)
+    share: function (msg) {
+      if (isOK) return send('VKWebAppShare', {}, 60000).then(function () { return true; }, function () { return false; });
+      return send('VKWebAppShowWallPostBox', { message: msg }, 60000).then(function () { return true; }, function () { return false; });
+    },
+    // История: только background_type image и url (так работает и в OK)
+    story: function () {
+      if (!storyUrl || !/^https:/.test(storyUrl)) return Promise.resolve(false);
+      return send('VKWebAppShowStoryBox', { background_type: 'image', url: storyUrl }, 60000).then(function () { return true; }, function () { return false; });
+    },
+    favorites: function () { return send('VKWebAppAddToFavorites', {}, 30000).then(function () { return true; }, function () { return false; }); },
+    homeScreen: function () { return send('VKWebAppAddToHomeScreen', {}, 30000).then(function () { return true; }, function () { return false; }); },
+    homeScreenSupported: function () {
+      if (id !== 'vk' || !/android/.test(vkPlatform)) return Promise.resolve(false);
+      return send('VKWebAppAddToHomeScreenInfo', {}).then(function (r) { return !!(r && r.is_feature_supported && !r.is_added_to_home_screen); }, function () { return false; });
     }
-  }
+  };
 
   window.Platform = {
-    inVK: inVK,
-    isOK: isOK,
-    ready: initPromise,
-    send: send,
-    load: load,
-    save: save,
+    id: id, isOK: isOK, language: 'ru', ready: ready,
+    caps: { invite: inBridge, share: inBridge, story: inBridge, favorites: id === 'vk', interstitialManaged: false, rewarded: true },
+    load: load, save: save,
     showInterstitial: function () { return showAd('interstitial'); },
     showRewarded: function () { return showAd('reward'); },
-    canShowAds: function () { return inVK; },
-    haptic: haptic,
-    onHide: function (f) { hideHandlers.push(f); },
-    onShow: function (f) { showHandlers.push(f); },
-    onAdStart: function (f) { adStartHandlers.push(f); },
-    onAdEnd: function (f) { adEndHandlers.push(f); },
-    isHidden: function () { return hidden; }
+    gameReady: function () {},
+    audioAllowed: function () { return true; },
+    haptic: function (kind) {
+      if (inBridge && !isOK) {
+        if (kind === 'tap') send('VKWebAppTapticImpactOccurred', { style: 'light' }).catch(function () {});
+        else send('VKWebAppTapticNotificationOccurred', { type: kind === 'error' ? 'error' : 'success' }).catch(function () {});
+      } else if (navigator.vibrate) { try { navigator.vibrate(kind === 'error' ? 40 : 12); } catch (e) {} }
+    },
+    onPause: function (f) { pauseFns.push(f); }, onResume: function (f) { resumeFns.push(f); },
+    isHidden: function () { return hidden; },
+    social: social
   };
 })();

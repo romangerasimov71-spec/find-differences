@@ -138,7 +138,7 @@
       var face = eyes(-6, 6, -44, 2.8) + smile(0, -36, 5);
       var nose = o.d.nose ? p('M0,-41 L16,-38 L0,-36 Z', PAL.orange, ' stroke-width="2.5"') : '';
       var btn = o.d.buttons ? c(0, -12, 2.8, OUT, NS) + c(0, -2, 2.8, OUT, NS) + c(0, 22, 3, OUT, NS) + c(0, 34, 3, OUT, NS) : '';
-      var hat = o.d.hat ? r(-15, -58, 30, 4, 2, '#33395c') + r(-10, -76, 20, 20, 2, '#33395c') + r(-10, -64, 20, 5, 0, o.c, ' stroke-width="2.5"') : '';
+      var hat = o.d.hat ? p('M-13,-52 L13,-52 L9,-72 L-9,-72 Z', '#5c8fe0') + '<path d="M-12,-56 Q0,-48 12,-56" fill="none" stroke-width="2.5"/>' + r(-11, -56, 22, 4, 2, '#3f6fc4', ' stroke-width="2.5"') + hl('M-8,-68 L-5,-68 L-7,-56 L-10,-56 Z') : '';
       return g(s + arms + body + h + scarf + face + nose + btn + hat);
     }
   });
@@ -381,13 +381,15 @@
 
   /* ===== Домик ===== */
   def('house', {
-    name: 'домик', w: 110, h: 110, colors: [PAL.red, '#c2793d', PAL.blue, PAL.teal], details: ['chimney', 'light', 'wreath'],
+    name: 'домик', w: 110, h: 128, colors: [PAL.red, '#c2793d', PAL.blue, PAL.teal], details: ['chimney', 'light', 'wreath', 'smoke', 'light2'],
     draw: function (o) {
-      var chim = o.d.chimney ? r(18, -46, 14, 26, 2, '#8a5a3a') + r(15, -50, 20, 7, 3, '#fff') : '';
+      var smoke = o.d.chimney && o.d.smoke ? c(26, -60, 6, '#e8eefc', ' stroke-width="3"') + c(32, -70, 7.5, '#e8eefc', ' stroke-width="3"') + c(26, -82, 5, '#e8eefc', ' stroke-width="3"') : '';
+      var chim = o.d.chimney ? r(18, -46, 14, 26, 2, '#8a5a3a') + r(15, -50, 20, 7, 3, '#fff') + smoke : '';
       var wall = r(-40, -8, 80, 60, 3, o.c);
       var roof = p('M-52,-4 L0,-48 L52,-4 Z', '#4a5da8');
       var snow = p('M-54,-4 L0,-50 L54,-4 Q44,2 36,-2 Q26,6 16,-2 Q6,4 -6,-2 Q-18,6 -28,-2 Q-40,4 -54,-4 Z', '#fff');
-      var win = r(-32, 6, 24, 22, 3, o.d.light ? '#ffe27a' : '#5c6ea8') + '<path d="M-20,6 L-20,28 M-32,17 L-8,17" stroke-width="3"/>';
+      var win = r(-32, 6, 24, 22, 3, o.d.light ? '#ffe27a' : '#5c6ea8', o.d.light ? ' class="glow"' : '') + '<path d="M-20,6 L-20,28 M-32,17 L-8,17" stroke-width="3"/>' +
+        r(-6, -30, 14, 14, 7, o.d.light2 ? '#ffe27a' : '#5c6ea8', o.d.light2 ? ' class="glow" stroke-width="3"' : ' stroke-width="3"');
       var door = r(6, 12, 22, 40, 3, '#7a4527') + c(23, 32, 2, PAL.gold, NS);
       var wr = o.d.wreath ? c(17, 22, 6, 'none', ' stroke="' + PAL.green + '" stroke-width="4"') : '';
       return g(shadow(0, 54, 54, 6) + chim + wall + hl('M-36,-4 L-30,-4 L-30,48 L-36,48 Z') + roof + snow + win + door + wr);
@@ -627,6 +629,99 @@
       var st = o.d.stripes ? '<path d="M-14,-20 L11,-20 M-13,0 L11,0 M-13,20 L12,20" stroke="#fff" stroke-width="5"/>' : '';
       var fr = '<path d="M-10,40 L-11,48 M-4,40 L-4,48 M2,40 L2,48 M8,40 L9,48" stroke-width="3"/>';
       return g(fr + b + st + hl('M-10,-36 L-6,-36 L-6,36 L-9,36 Z'));
+    }
+  });
+
+  /* ===== Олень ===== */
+  def('deer', {
+    name: 'олень', w: 100, h: 112, colors: [PAL.red, PAL.green, PAL.blue], flip: true, details: ['antlers', 'bell'],
+    draw: function (o) {
+      var b = '#b97a45', bl = '#ecc797';
+      var legs = r(-26, 12, 8, 34, 3, '#9b6236') + r(-14, 14, 8, 32, 3, '#9b6236') + r(10, 14, 8, 32, 3, '#9b6236') + r(22, 12, 8, 34, 3, '#9b6236') +
+        r(-26, 40, 8, 6, 2, '#4a3020', ' stroke-width="3"') + r(-14, 40, 8, 6, 2, '#4a3020', ' stroke-width="3"') + r(10, 40, 8, 6, 2, '#4a3020', ' stroke-width="3"') + r(22, 40, 8, 6, 2, '#4a3020', ' stroke-width="3"');
+      var tail = e(-34, -2, 7, 5, bl);
+      var body = e(0, 6, 34, 20, b) + e(2, 14, 20, 8, bl, NS);
+      var neck = p('M14,-6 L26,-34 L40,-28 L32,4 Z', b);
+      var ant = o.d.antlers ? '<path d="M28,-46 L22,-64 M24,-58 L14,-64 M24,-56 L30,-70 M40,-44 L46,-62 M44,-56 L54,-60 M44,-54 L40,-68" fill="none" stroke="' + OUT + '" stroke-width="9"/>' +
+        '<path d="M28,-46 L22,-64 M24,-58 L14,-64 M24,-56 L30,-70 M40,-44 L46,-62 M44,-56 L54,-60 M44,-54 L40,-68" fill="none" stroke="#7a4c26" stroke-width="4"/>' : '';
+      var ear = p('M26,-44 L16,-52 L26,-38 Z', b, ' stroke-width="3"') + p('M42,-42 L50,-50 L44,-38 Z', b, ' stroke-width="3"');
+      var head = e(34, -36, 13, 11, b) + e(44, -30, 9, 7, bl) + c(52, -31, 4, OUT, NS) + c(33, -39, 2.8, OUT, NS) + c(34, -40, 1, '#fff', NS);
+      var collar = p('M14,-14 Q24,-6 34,-14 L36,-8 Q24,2 12,-8 Z', o.c, ' stroke-width="3"') + (o.d.bell ? c(24, -1, 5, PAL.gold, ' stroke-width="3"') : '');
+      return '<g transform="translate(-8,6)">' + g(shadow(0, 46, 40, 6) + legs + tail + body + neck + ant + ear + head + collar + hl('M-24,-2 Q-14,-12 4,-12 Q-12,-6 -20,4 Z')) + '</g>';
+    }
+  });
+
+  /* ===== Дед Мороз ===== */
+  def('santa', {
+    name: 'Дед Мороз', w: 84, h: 124, colors: [PAL.red, PAL.blue, '#c7303a'], details: ['staff', 'belt'],
+    draw: function (o) {
+      var staff = o.d.staff ? r(30, -40, 7, 98, 3, '#dfe8ff') + star(33, -46, 11, 5, PAL.gold, ' stroke-width="3"') : '';
+      var coat = p('M-28,56 L-20,-12 Q0,-22 20,-12 L28,56 Z', o.c);
+      var fur = r(-30, 48, 60, 10, 5, '#fff') + r(-5, -10, 10, 60, 3, '#fff');
+      var belt = o.d.belt ? r(-23, 16, 46, 7, 2, PAL.gold, ' stroke-width="3"') : '';
+      var arms = p('M-20,-8 Q-34,8 -30,26 L-22,26 Q-22,10 -14,0 Z', o.c) + p('M20,-8 Q34,8 30,22 L24,20 Q22,8 14,0 Z', o.c) +
+        r(-34, 24, 14, 7, 3, '#fff', ' stroke-width="3"') + c(-27, 34, 6, PAL.red, ' stroke-width="3"') + c(30, 24, 6, PAL.red, ' stroke-width="3"');
+      var face = c(0, -30, 13, '#ffd6b0');
+      var beard = p('M-15,-30 Q-18,-2 0,8 Q18,-2 15,-30 Q8,-20 0,-22 Q-8,-20 -15,-30 Z', '#fff');
+      var mus = p('M0,-24 Q-8,-28 -12,-22 Q-6,-20 0,-22 Q6,-20 12,-22 Q8,-28 0,-24 Z', '#fff', ' stroke-width="2.5"');
+      var eyes2 = c(-5, -33, 2.2, OUT, NS) + c(5, -33, 2.2, OUT, NS) + c(0, -27, 3.4, '#ff9a8a', ' stroke-width="2"');
+      var hat = p('M-15,-38 Q0,-62 15,-38 Z', o.c) + r(-17, -42, 34, 8, 4, '#fff') + c(0, -58, 4.5, '#fff', ' stroke-width="3"');
+      return g(shadow(0, 58, 34, 5) + staff + coat + hl('M-20,0 L-16,-8 L-12,46 L-20,46 Z') + fur + belt + arms + face + beard + mus + eyes2 + hat);
+    }
+  });
+
+  /* ===== Снегурочка ===== */
+  def('snowmaiden', {
+    name: 'Снегурочка', w: 72, h: 120, colors: ['#5fb4ff', '#9d8cff', '#3fc7d0'], details: ['braid', 'crown'],
+    draw: function (o) {
+      var braid = o.d.braid ? p('M10,-34 Q22,-10 16,22 Q14,30 18,36 L12,38 Q8,28 10,20 Q14,-8 4,-30 Z', '#ffd25e') + p('M12,34 L6,44 L16,42 Z', PAL.red, ' stroke-width="3"') : '';
+      var coat = p('M-24,56 L-16,-10 Q0,-18 16,-10 L24,56 Z', o.c);
+      var fur = r(-26, 48, 52, 10, 5, '#fff') + r(-4, -8, 8, 58, 3, '#fff');
+      var flakes = '<path d="M-14,24 l0,10 M-19,29 l10,0 M14,8 l0,10 M9,13 l10,0" stroke="#fff" stroke-width="2.5"/>';
+      var arms = p('M-16,-6 Q-28,8 -24,26 L-17,26 Q-18,10 -10,2 Z', o.c) + p('M16,-6 Q28,8 24,26 L17,26 Q18,10 10,2 Z', o.c) +
+        c(-21, 30, 5, '#ffd6b0', ' stroke-width="3"') + c(21, 30, 5, '#ffd6b0', ' stroke-width="3"');
+      var hair = p('M-14,-26 Q-16,-46 0,-46 Q16,-46 14,-26 Q8,-40 0,-40 Q-8,-40 -14,-26 Z', '#ffd25e');
+      var face = c(0, -30, 13, '#ffe0c4') + eyes(-5, 5, -31, 2.2) + cheeks(-8, 8, -25) + '<path d="M-3,-23 Q0,-21 3,-23" fill="none" stroke-width="2.5"/>';
+      var crown = o.d.crown ? p('M-15,-40 Q-14,-60 0,-62 Q14,-60 15,-40 Q0,-46 -15,-40 Z', o.c) + c(0, -52, 3, PAL.gold, ' stroke-width="2"') + c(-8, -48, 2, '#fff', NS) + c(8, -48, 2, '#fff', NS) : '';
+      return g(shadow(0, 58, 30, 5) + braid + coat + hl('M-16,0 L-12,-6 L-10,46 L-17,46 Z') + fur + flakes + arms + face + hair + crown);
+    }
+  });
+
+  /* ===== Ёжик в шапке ===== */
+  def('hedgehog', {
+    name: 'ёжик', w: 84, h: 70, colors: [PAL.red, PAL.blue, PAL.green, PAL.purple], flip: true, details: ['hat', 'apple'],
+    draw: function (o) {
+      var sp = 'M-34,18 ', i;
+      for (i = 0; i <= 10; i++) {
+        var a = Math.PI * (1 - i / 10) , R1 = 34, R2 = 44;
+        var x1 = Math.cos(a) * R1 - 4, y1 = 14 - Math.sin(a) * R1 * 0.85;
+        var am = Math.PI * (1 - (i + 0.5) / 10), x2 = Math.cos(am) * R2 - 4, y2 = 14 - Math.sin(am) * R2 * 0.85;
+        sp += 'L' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' ' + (i < 10 ? 'L' + x2.toFixed(1) + ',' + y2.toFixed(1) + ' ' : '');
+      }
+      var spikes = p(sp + 'Z', '#7a4c2c');
+      var body = e(0, 14, 30, 18, '#a8693a', ' stroke-width="3"');
+      var face = p('M10,0 Q34,4 42,16 Q32,26 12,24 Z', '#f2d2a6') + c(42, 15, 4, OUT, NS) + c(24, 8, 2.6, OUT, NS) + c(25, 7, 1, '#fff', NS) + e(28, 16, 3.5, 2.2, 'rgba(255,105,140,0.55)', NS);
+      var feet = e(-12, 32, 7, 4, '#7a4c2c', ' stroke-width="3"') + e(14, 32, 7, 4, '#7a4c2c', ' stroke-width="3"');
+      var apple = o.d.apple ? c(-16, -22, 8, PAL.red, ' stroke-width="3"') + '<path d="M-16,-30 L-14,-35" stroke-width="2.5"/>' + c(-18, -24, 2, '#fff', NS) : '';
+      var hat = o.d.hat ? p('M2,-20 Q12,-42 26,-16 Z', o.c, ' stroke-width="3.5"') + r(0, -20, 28, 7, 3, '#fff', ' stroke-width="3"') + c(16, -38, 5, '#fff', ' stroke-width="3"') : '';
+      return g(shadow(0, 34, 34, 5) + spikes + body + feet + face + apple + hat);
+    }
+  });
+
+  /* ===== Гирлянда-лампочки ===== */
+  def('lights', {
+    name: 'гирлянда', w: 190, h: 50, colors: [PAL.red, PAL.purple, PAL.teal], details: ['all'],
+    draw: function (o) {
+      var wire = '<path d="M-92,-16 Q0,12 92,-16" fill="none" stroke-width="3"/>';
+      var cols = [o.c, PAL.gold, PAL.green, PAL.blue, o.c, PAL.gold, PAL.green, PAL.blue], out = '';
+      for (var i = 0; i < 8; i++) {
+        var t = (i + 0.5) / 8, x = -92 + t * 184, y = -16 + 4 * 28 * t * (1 - t);
+        var off = !o.d.all && i === 5;
+        out += r(x - 3.5, y - 1, 7, 6, 1.5, '#5a6488', ' stroke-width="2.5"') +
+          p('M' + x + ',' + (y + 4) + ' C' + (x - 9) + ',' + (y + 12) + ' ' + (x - 6) + ',' + (y + 24) + ' ' + x + ',' + (y + 24) + ' C' + (x + 6) + ',' + (y + 24) + ' ' + (x + 9) + ',' + (y + 12) + ' ' + x + ',' + (y + 4) + ' Z',
+            off ? '#5c6ea8' : cols[i], ' stroke-width="3"' + (off ? '' : ' class="twinkle tw' + (i % 3) + '"'));
+      }
+      return g(wire + out);
     }
   });
 

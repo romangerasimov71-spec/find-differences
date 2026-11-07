@@ -4,103 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#14245e">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3a8f'/%3E%3Cpath d='M16 3l11 21H5z' fill='%2333b35a' stroke='%231d2b5c' stroke-width='2' stroke-linejoin='round'/%3E%3Crect x='13' y='24' width='6' height='5' fill='%23a8693a'/%3E%3Ccircle cx='13' cy='17' r='2' fill='%23e8423f'/%3E%3Ccircle cx='19' cy='20' r='2' fill='%23ffc233'/%3E%3C/svg%3E">
 <title>Найди отличия: Новый год</title>
-<!-- VK Bridge подключается и инициализируется первым, до загрузки остальных ресурсов -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3a8f'/%3E%3Cpath d='M16 3l11 21H5z' fill='%2333b35a' stroke='%231d2b5c' stroke-width='2' stroke-linejoin='round'/%3E%3Crect x='13' y='24' width='6' height='5' fill='%23a8693a'/%3E%3Ccircle cx='13' cy='17' r='2' fill='%23e8423f'/%3E%3Ccircle cx='19' cy='20' r='2' fill='%23ffc233'/%3E%3C/svg%3E">
+<!--PLATFORM--><!-- VK Bridge подключается первым скриптом, VKWebAppInit вызывается до загрузки остальных ресурсов -->
 <script src="js/vk-bridge.min.js"></script>
-<script src="js/platform.js"></script>
+<script src="js/platform.js"></script><!--/PLATFORM-->
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <canvas id="snow" aria-hidden="true"></canvas>
-
 <div id="app">
-  <!-- Загрузка -->
-  <section class="screen active" id="scr-loading">
-    <div class="loader"><div class="loader-flake"></div><div class="loader-text">Загрузка…</div></div>
+
+  <section class="screen active" id="scr-splash">
+    <div class="splash">
+      <div class="splash-lights" id="splash-lights"></div>
+      <h1 class="title"><span class="t1" data-t="title1">Найди отличия</span><span class="t2" data-t="title2">Новый год</span></h1>
+      <div class="splash-bar"><i></i></div>
+    </div>
   </section>
 
-  <!-- Главное меню -->
   <section class="screen" id="scr-menu">
     <div class="menu-top">
-      <h1 class="title"><span class="t1">Найди отличия</span><span class="t2">Новый год</span></h1>
+      <div class="menu-lights" id="menu-lights"></div>
+      <h1 class="title"><span class="t1" data-t="title1">Найди отличия</span><span class="t2" data-t="title2">Новый год</span></h1>
+      <div class="slogan" data-t="slogan">Уютные отличия к празднику</div>
     </div>
     <div class="menu-art" id="menu-art"></div>
     <div class="menu-buttons">
-      <button class="btn btn-red btn-big" id="btn-play">Играть</button>
-      <div class="menu-sub" id="menu-sub"></div>
+      <button class="btn btn-red btn-big pulse" id="btn-play"><span data-t="play">Играть</span><small id="play-sub"></small></button>
+      <button class="btn btn-blue" id="btn-levels" data-t="levels">Уровни</button>
       <div class="menu-row">
-        <button class="btn-round" id="btn-sound" aria-label="Звук"></button>
-        <button class="btn btn-blue" id="btn-levels">Уровни</button>
-        <button class="btn-round" id="btn-music" aria-label="Музыка"></button>
+        <button class="btn-round ic-sound" id="btn-sound" data-t-aria="sound"></button>
+        <button class="btn-round ic-music" id="btn-music" data-t-aria="music"></button>
+        <button class="btn-round ic-gift" id="btn-gift" data-t-aria="giftTitle"><span class="dot" id="gift-dot"></span></button>
+        <button class="btn-round ic-friends" id="btn-invite" data-t-aria="invite"></button>
       </div>
     </div>
   </section>
 
-  <!-- Выбор уровня -->
-  <section class="screen" id="scr-levels">
+  <section class="screen" id="scr-map">
     <header class="bar">
-      <button class="btn-round" id="btn-levels-back" aria-label="Назад"></button>
-      <div class="bar-title">Уровни</div>
-      <div class="bar-stars" id="total-stars"></div>
+      <button class="btn-round ic-back" id="btn-map-back" data-t-aria="back"></button>
+      <div class="bar-title" data-t="levels">Уровни</div>
+      <div class="bar-stars"><span class="star-ic"></span><b id="total-stars">0</b></div>
     </header>
-    <div class="levels-scroll"><div class="levels-grid" id="levels-grid"></div></div>
+    <div class="map-scroll" id="map-scroll"><div class="map" id="map"></div></div>
   </section>
 
-  <!-- Игра -->
   <section class="screen" id="scr-game">
-    <header class="bar">
-      <button class="btn-round" id="btn-pause" aria-label="Пауза"></button>
+    <header class="bar game-bar">
+      <button class="btn-round ic-pause" id="btn-pause" data-t-aria="pause"></button>
       <div class="bar-center">
         <div class="bar-title" id="game-title">Уровень 1</div>
-        <div class="found" id="found"></div>
+        <div class="found-pill" id="found">Найдено 0/3</div>
       </div>
-      <button class="btn-round btn-hint" id="btn-hint" aria-label="Подсказка"><span class="badge" id="hint-count">3</span></button>
+      <div class="hearts" id="hearts"></div>
     </header>
     <div class="board" id="board">
-      <div class="pic" id="pic-a"><svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <div class="pic" id="pic-b"><svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="pic" id="pic-a"><svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice"></svg></div>
+      <div class="pic" id="pic-b"><svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMid slice"></svg></div>
+      <button class="btn-round ic-zoomout" id="btn-zoom-reset" data-t-aria="zoomReset" hidden></button>
     </div>
+    <div class="game-bottom">
+      <button class="btn btn-gold btn-hint" id="btn-hint"><span class="hint-ic"></span><span data-t="hint">Подсказка</span><span class="hint-badge" id="hint-badge"></span></button>
+    </div>
+    <div class="finger" id="finger" hidden></div>
   </section>
 
   <!-- Модальные окна -->
-  <div class="modal" id="modal-win">
-    <div class="card">
-      <div class="card-ribbon">Отлично!</div>
-      <div class="stars" id="win-stars"></div>
-      <div class="card-text" id="win-text"></div>
-      <button class="btn btn-red btn-big" id="btn-next">Дальше</button>
-      <button class="btn btn-blue" id="btn-win-menu">В меню</button>
+  <div class="modal" id="modal-win"><div class="card">
+    <div class="card-ribbon" data-t="winTitle">Отлично!</div>
+    <div class="stars" id="win-stars"></div>
+    <div class="card-text" id="win-text"></div>
+    <button class="btn btn-red btn-big" id="btn-next" data-t="next">Дальше</button>
+    <div class="row2">
+      <button class="btn btn-blue" id="btn-win-menu" data-t="menu">Меню</button>
+      <button class="btn btn-blue" id="btn-share" data-t="share">Поделиться</button>
     </div>
-  </div>
+  </div></div>
 
-  <div class="modal" id="modal-pause">
-    <div class="card">
-      <div class="card-ribbon">Пауза</div>
-      <div class="toggles">
-        <button class="btn-round" id="btn-sound2" aria-label="Звук"></button>
-        <button class="btn-round" id="btn-music2" aria-label="Музыка"></button>
-      </div>
-      <button class="btn btn-red btn-big" id="btn-resume">Продолжить</button>
-      <button class="btn btn-blue" id="btn-restart">Начать заново</button>
-      <button class="btn btn-blue" id="btn-pause-menu">В меню</button>
+  <div class="modal" id="modal-lose"><div class="card">
+    <div class="card-ribbon" data-t="loseTitle">Ой!</div>
+    <div class="lose-art" id="lose-art"></div>
+    <div class="card-text" data-t="loseText">Сердечки закончились.</div>
+    <button class="btn btn-gold btn-big btn-ad" id="btn-continue"><span class="ad-ic"></span><span data-t="continueAd">Продолжить</span></button>
+    <button class="btn btn-blue" id="btn-lose-restart" data-t="restart">Заново</button>
+  </div></div>
+
+  <div class="modal" id="modal-pause"><div class="card">
+    <div class="card-ribbon" data-t="pause">Пауза</div>
+    <div class="toggles">
+      <button class="btn-round ic-sound" id="btn-sound2" data-t-aria="sound"></button>
+      <button class="btn-round ic-music" id="btn-music2" data-t-aria="music"></button>
     </div>
-  </div>
+    <button class="btn btn-red btn-big" id="btn-resume" data-t="resume">Продолжить</button>
+    <button class="btn btn-blue" id="btn-restart" data-t="restart">Заново</button>
+    <button class="btn btn-blue" id="btn-pause-menu" data-t="menu">Меню</button>
+  </div></div>
 
-  <div class="modal" id="modal-hint">
-    <div class="card">
-      <div class="card-ribbon">Подсказки</div>
-      <div class="hint-art" id="hint-art"></div>
-      <div class="card-text">Подсказки закончились. Посмотрите короткую рекламу и получите ещё&nbsp;3!</div>
-      <button class="btn btn-gold btn-big" id="btn-hint-ad">Получить +3</button>
-      <button class="btn btn-blue" id="btn-hint-close">Не сейчас</button>
-    </div>
-  </div>
+  <div class="modal" id="modal-gift"><div class="card">
+    <div class="card-ribbon" data-t="giftTitle">Подарок дня</div>
+    <div class="gift-days" id="gift-days"></div>
+    <div class="card-text" data-t="giftText">Заходите каждый день — подарки растут!</div>
+    <button class="btn btn-gold btn-big btn-ad" id="btn-gift-x2"><span class="ad-ic"></span><span data-t="giftTakeX2">Забрать ×2</span></button>
+    <button class="btn btn-blue" id="btn-gift-take" data-t="giftTake">Забрать</button>
+  </div></div>
 
+  <div class="modal" id="modal-share"><div class="card">
+    <div class="card-ribbon" data-t="share">Поделиться</div>
+    <button class="btn btn-blue" id="btn-share-wall" data-t="shareWall">На стену</button>
+    <button class="btn btn-blue" id="btn-share-story" data-t="shareStory">В историю</button>
+    <button class="btn btn-red" id="btn-share-close" data-t="close">Закрыть</button>
+  </div></div>
+
+  <div class="modal" id="modal-fav"><div class="card">
+    <div class="card-ribbon" data-t="favTitle">Нравится игра?</div>
+    <div class="card-text" data-t="favText">Добавьте её, чтобы быстро возвращаться.</div>
+    <button class="btn btn-gold" id="btn-fav" data-t="favAdd">В избранное</button>
+    <button class="btn btn-gold" id="btn-home" data-t="homeAdd" hidden>На главный экран</button>
+    <button class="btn btn-blue" id="btn-fav-later" data-t="later">Позже</button>
+  </div></div>
+
+  <div class="ad-stub" id="ad-stub"><div><b data-t="adStub">Реклама</b><span data-t="adStubSub">Здесь будет реклама</span><i></i></div></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
   <div class="toast" id="toast"></div>
 </div>
 
+<script src="js/i18n.js"></script>
 <script src="js/art.js"></script>
+<script src="js/bounds.js"></script>
+<script src="js/scenes.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/game.js"></script>
