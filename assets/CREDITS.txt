@@ -1,16 +1,37 @@
 Звуки и музыка — источники и лицензии
 =====================================
 
-Сейчас в assets/sfx и assets/music лежат ТИХИЕ ЗАГЛУШКИ (тишина, сгенерирована ffmpeg),
-чтобы система звука работала до загрузки настоящих файлов.
+Все файлы — CC0 1.0 (общественное достояние): https://creativecommons.org/publicdomain/zero/1.0/
+Указание авторов не обязательно, но мы их указываем.
+Каждый файл есть в двух форматах: .ogg (Vorbis) и .mp3 (для Safari).
+Обработка (обрезка тишины, громкость, петля, сжатие) — tools/make-audio.py.
 
-Нужные файлы (ogg + mp3, CC0):
-  sfx/click   — тап по кнопке
-  sfx/found   — находка отличия (колокольчик)
-  sfx/miss    — ошибка, промах
-  sfx/win     — победа (джингл)
-  sfx/star    — появление звезды на экране победы
-  sfx/gift    — получение подарка / подсказок
-  music/winter — фоновая зимняя музыка, бесшовный цикл
+Эффекты — Kenney (www.kenney.nl), лицензия CC0
+------------------------------------------------
+Паки Kenney скачаны с opengameart.org, со страниц, которые выложил сам Kenney (аккаунт kenney):
+сайт kenney.nl из этого окружения отвечает 403. Это те же паки с той же лицензией CC0
+(файл License.txt внутри архива).
 
-После замены впишите сюда автора, название, ссылку и лицензию каждого файла.
+Пак «Interface Sounds» (1.0), Kenney, CC0
+  https://opengameart.org/content/interface-sounds  (kenney_interfaceSounds.zip)
+  https://kenney.nl/assets/interface-sounds
+    sfx/click  ← Audio/click_002.ogg     — щелчок кнопки
+    sfx/found  ← Audio/glass_001.ogg     — находка отличия, «дзынь»
+    sfx/miss   ← Audio/bong_001.ogg      — ошибка, мягкий глухой звук
+    sfx/star   ← Audio/pluck_002.ogg     — появление звезды (в игре три звезды звучат до-ми-соль)
+
+Пак «Music Jingles» (85 Short music jingles), Kenney, CC0
+  https://opengameart.org/content/85-short-music-jingles  (jingleSounds_Kenney.zip)
+  https://kenney.nl/assets/music-jingles
+    sfx/win    ← OGG/jingles_STEEL/jingles_STEEL10.ogg — победа, джингл на стил-драме
+    sfx/gift   ← OGG/jingles_STEEL/jingles_STEEL02.ogg — подарок, «волшебный» восходящий джингл
+
+Пак «Impact Sounds» не понадобился: мягкий звук ошибки взят из Interface Sounds.
+
+Музыка
+------
+music/winter ← «Winter Wind», автор wipics, CC0 (на странице: Public Domain / CC0)
+  https://opengameart.org/content/winter-wind  (winter-wind.mp3)
+  Теги автора: winter, snow, Christmas, bells, calm, strings, loop.
+  Петля 80,0 с (28 тактов, 84 уд/мин): хвост после 80 с подмешан в начало, без паузы на стыке.
+  Сжато до 96 кбит/с, ogg и mp3.
