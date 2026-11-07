@@ -3,11 +3,12 @@
 (function () {
   'use strict';
   var b = window.bridge;
-  var pauseFns = [], resumeFns = [], paused = false, audioOn = true;
+  var pauseFns = [], resumeFns = [], paused = {}, audioOn = true; // пауза по причинам: platform, ad
   function setPaused(v, why) {
-    if (v === paused) return; paused = v;
+    if (!!paused[why] === v) return; paused[why] = v;
     (v ? pauseFns : resumeFns).forEach(function (f) { f(why); });
   }
+  function anyPaused() { return !!(paused.platform || paused.ad); }
 
   var ready = b.initialize().then(function () {
     var lang = (b.platform.language || 'en').toLowerCase();
@@ -74,7 +75,7 @@
     audioAllowed: function () { return audioOn; },
     haptic: function (kind) { if (navigator.vibrate) { try { navigator.vibrate(kind === 'error' ? 40 : 12); } catch (e) {} } },
     onPause: function (f) { pauseFns.push(f); }, onResume: function (f) { resumeFns.push(f); },
-    isHidden: function () { return paused || !audioOn; },
+    isHidden: function () { return anyPaused() || !audioOn; },
     social: {}
   };
 })();

@@ -17,7 +17,7 @@ src/                    игра
   js/bounds.js          замеры предметов (генерирует tools/gen-bounds.js)
   js/scenes.js          фоны и слоты сцен
   js/levels.js          генератор уровней
-  js/audio.js           звук из файлов (WebAudio)
+  js/audio.js           звук из файлов (WebAudio): эффекты Kenney, музыка Winter Wind, всё CC0
   js/game.js            экраны и логика
   js/platform.js        VK и OK (VK Bridge с таймаутами)
   js/platform-playgama.js  Playgama Bridge
@@ -42,12 +42,14 @@ node tools/play.js /tmp/out 1 2 3 4 5 21 51   # прохождение уров�
 node tools/vk-mock-test.js                     # VK и OK на подставном мосте
 (cd dist/playgama && python3 -m http.server 8124 &)
 node tools/playgama-mock-test.js               # сборка Playgama на подставном SDK
+node tools/audio-test.js                       # звук на телефоне: петля, реклама, сворачивание
 
 node tools/gen-bounds.js           # после изменений в art.js
 node tools/make-assets.js          # пересоздать материалы карточек
+python3 tools/make-audio.py <src>  # пересобрать звуки из CC0-исходников (см. assets/CREDITS.txt)
 ```
 
 ## Публикация
 - VK/OK: содержимое `dist/vk/` лежит в ветке `gh-pages` → GitHub Pages
   `https://romangerasimov71-spec.github.io/find-differences/`. Ссылку указать в настройках игры на dev.vk.ru.
-- Playgama: `dist/find-differences-playgama.zip` — загружать после замены звуков на настоящие.
+- Playgama: `dist/find-differences-playgama.zip` — готов к загрузке.

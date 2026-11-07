@@ -481,7 +481,7 @@
     G.stars = st;
     modal('modal-win', true); confetti();
     S.play('win'); P.haptic('success');
-    for (var k = 0; k < st; k++) (function (k) { setTimeout(function () { S.play('star'); }, 450 + k * 350); })(k);
+    for (var k = 0; k < st; k++) (function (k) { setTimeout(function () { S.play('star', [1, 1.26, 1.5][k]); }, 450 + k * 350); })(k);
   }
   function lose() {
     if (P.levelEvent) P.levelEvent('level_failed', G.n);
@@ -527,12 +527,13 @@
   /* ---------- Пауза, сворачивание, реклама ---------- */
   function pauseGame() { if (current === 'scr-game' && G && !G.done && !anyModal()) { modal('modal-pause', true); if (P.levelEvent) P.levelEvent('level_paused', G.n); } }
   P.onPause(function (why) {
-    S.suspend();
+    S.suspend(why);
     if (why === 'hide' || why === 'platform') { snow.setVisible(false); pauseGame(); }
   });
   P.onResume(function (why) {
+    if (why === 'show') why = 'hide'; // VK/OK: возврат из свёрнутого состояния снимает паузу 'hide'
     if (why === 'hide' || why === 'platform') snow.setVisible(true);
-    S.restore(); // единая функция «восстановить звук»
+    S.restore(why); // единая функция «восстановить звук»
   });
 
   /* ---------- Кнопки ---------- */
@@ -592,7 +593,7 @@
   P.ready.then(function () {
     window.I18N.setLang(P.language || 'ru'); window.I18N.apply();
     document.title = T('title1') + ': ' + T('title2');
-    if (!P.audioAllowed()) S.suspend(); // платформа запретила звук на старте (Playgama)
+    if (!P.audioAllowed()) S.suspend('audio'); // платформа запретила звук на старте (Playgama)
     return P.load();
   }).then(function (list) {
     var best = null;

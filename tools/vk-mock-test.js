@@ -50,14 +50,14 @@ async function run(b, query, label) {
   ok(await p.isVisible('#modal-pause.show'), 'сворачивание ставит на паузу');
   if (label === 'vk') await p.evaluate(() => vkBridge.__emit('VKWebAppViewRestore'));
   else await p.evaluate(() => { Object.defineProperty(document, 'hidden', { value: false, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
-  ok(await p.evaluate(() => window.Sound.blocked) === 0, 'звук восстановлен после возврата');
+  ok(await p.evaluate(() => window.Sound.blocked) === false, 'звук восстановлен после возврата');
   await p.click('#btn-resume');
   await p.evaluate(() => { window.__game.save.hints = 0; });
   await p.click('#btn-hint'); await p.waitForTimeout(600);
   c = await calls();
   ok(c.some(x => x.startsWith('VKWebAppShowNativeAds {"ad_format":"reward"')), 'подсказка за рекламу (reward)');
   ok(await p.isVisible('.mark-hint'), 'подсказка подсвечена после рекламы');
-  ok(await p.evaluate(() => window.Sound.blocked) === 0, 'звук восстановлен после рекламы');
+  ok(await p.evaluate(() => window.Sound.blocked) === false, 'звук восстановлен после рекламы');
   await p.evaluate(() => { const n = Date.now; Date.now = () => n() + 400000; window.__game.save.wins = 2; });
   await solve(4); await p.click('#btn-next'); await p.waitForTimeout(700);
   // рост: после 3 побед в VK — избранное, затем межстраничная
