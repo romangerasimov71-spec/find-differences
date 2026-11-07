@@ -115,7 +115,7 @@ svg { display: block; }
 .bar-center { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
 .bar-stars { display: flex; align-items: center; gap: 4px; min-width: 54px; justify-content: flex-end; font-weight: 900; font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 var(--navy); }
 .star-ic svg { width: 24px; height: 24px; }
-.found-pill { background: rgba(10,18,60,.55); border: 3px solid var(--navy); border-radius: 14px; padding: 2px 12px; font-weight: 800; font-size: 16px; }
+.found-pill { background: rgba(10,18,60,.55); border: 3px solid var(--navy); border-radius: 14px; padding: 2px 12px; font-weight: 800; font-size: 16px; white-space: nowrap; }
 .found-pill.bump { animation: pop .35s ease-out; }
 .hearts { display: flex; gap: 2px; min-width: 96px; justify-content: flex-end; }
 .hearts svg { width: 30px; height: 30px; }
@@ -142,7 +142,7 @@ svg { display: block; }
 @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
 #btn-zoom-reset { position: absolute; right: 6px; top: 6px; width: 44px; height: 44px; z-index: 3; }
 #btn-zoom-reset svg { width: 24px; height: 24px; }
-.game-bottom { width: 100%; display: flex; justify-content: center; padding-top: 10px; }
+.game-bottom { width: 100%; display: flex; justify-content: center; align-items: center; gap: 14px; padding-top: 10px; }
 .btn-hint { max-width: 260px; min-height: 58px; font-size: 22px; flex-direction: row; }
 .hint-badge { position: absolute; right: -10px; top: -12px; min-width: 32px; height: 32px; padding: 0 6px; border-radius: 16px;
   background: var(--red); border: 3px solid var(--navy); color: #fff; font-size: 16px; line-height: 26px; text-align: center; text-shadow: none;
@@ -180,7 +180,24 @@ svg { display: block; }
 .stars svg.on { animation: starIn .5s cubic-bezier(.2,1.6,.4,1) both; }
 .stars svg:nth-child(2).on { animation-delay: .35s; } .stars svg:nth-child(3).on { animation-delay: .7s; }
 @keyframes starIn { from { transform: scale(0) rotate(-80deg); } to { transform: scale(1) rotate(0); } }
-.toggles { display: flex; justify-content: center; gap: 22px; padding: 2px 0 6px; }
+/* громкость */
+.vol { display: flex; flex-direction: column; gap: 16px; padding: 2px 0 6px; text-align: left; }
+.vol-row { display: flex; align-items: center; gap: 12px; }
+.vol-row .btn-round { width: 50px; height: 50px; }
+.vol-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.vol-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; font-weight: 900; }
+.vol-val { font-size: 15px; color: #56649a; font-variant-numeric: tabular-nums; }
+.vol input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 36px; margin: 0; background: transparent; cursor: pointer; touch-action: none; --p: 50%; }
+.vol input[type=range]:focus { outline: none; }
+.vol input[type=range]::-webkit-slider-runnable-track { height: 16px; border-radius: 10px; border: 3px solid var(--navy);
+  background: linear-gradient(to right, var(--gold) var(--p), #dfe4f5 var(--p)); }
+.vol input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 32px; height: 32px; margin-top: -11px; border-radius: 50%;
+  background: var(--cream); border: 4px solid var(--navy); box-shadow: 0 3px 0 var(--navy); }
+.vol input[type=range]::-moz-range-track { height: 10px; border-radius: 10px; border: 3px solid var(--navy); background: #dfe4f5; }
+.vol input[type=range]::-moz-range-progress { height: 10px; border-radius: 10px; border: 3px solid var(--navy); background: var(--gold); }
+.vol input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--cream); border: 4px solid var(--navy); box-shadow: 0 3px 0 var(--navy); }
+.vol-row.off input[type=range] { filter: grayscale(1); opacity: .5; }
+.vol-row.off .vol-head span { opacity: .55; }
 .lose-art { height: 96px; display: flex; justify-content: center; }
 .lose-art svg { height: 100%; width: auto; }
 .gift-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }

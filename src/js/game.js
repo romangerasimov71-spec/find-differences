@@ -42,7 +42,8 @@
 
   /* ---------- Сохранение ---------- */
   var save;
-  function defaults() { return { v: 2, unlocked: 1, stars: {}, hints: CFG.startHints, sfx: true, music: true, last: 1, wins: 0, gift: { day: -1, date: '' }, inv: '', fav: 0, tipZoom: 0 }; }
+  function defaults() { return { v: 2, unlocked: 1, stars: {}, hints: CFG.startHints, sfx: true, music: true, vm: 0.7, vs: 0.9, last: 1, wins: 0, gift: { day: -1, date: '' }, inv: '', fav: 0, tipZoom: 0 }; }
+  function vol(v, d) { return typeof v === 'number' && v >= 0 && v <= 1 ? Math.round(v * 100) / 100 : d; }
   function sanitize(s) {
     var o = defaults();
     if (!s || typeof s !== 'object') return o;
@@ -50,6 +51,7 @@
     if (s.stars) for (var k in s.stars) { var v = s.stars[k] | 0; if (v >= 1 && v <= 3 && +k >= 1 && +k <= L.COUNT) o.stars[k] = v; }
     o.hints = typeof s.hints === 'number' ? Math.max(0, Math.min(999, s.hints | 0)) : CFG.startHints;
     o.sfx = s.sfx !== false; o.music = s.music !== false;
+    o.vm = vol(s.vm, o.vm); o.vs = vol(s.vs, o.vs);
     o.last = Math.max(1, Math.min(o.unlocked, s.last | 0 || o.unlocked));
     o.wins = s.wins | 0;
     if (s.gift && typeof s.gift.date === 'string') o.gift = { day: s.gift.day | 0, date: s.gift.date };
@@ -210,12 +212,55 @@
     $('play-sub').textContent = T('levelOf', { n: Math.min(save.last, save.unlocked), total: L.COUNT });
     $('gift-dot').classList.toggle('on', giftAvailable());
     $('btn-invite').hidden = !P.caps.invite;
-    updateToggles();
+    updateAudioUi();
   }
-  function updateToggles() {
-    ['btn-sound', 'btn-sound2'].forEach(function (id) { setIcon($(id), save.sfx ? ICON.sound : ICON.soundOff); $(id).classList.toggle('off', !save.sfx); });
-    ['btn-music', 'btn-music2'].forEach(function (id) { setIcon($(id), save.music ? ICON.music : ICON.musicOff); $(id).classList.toggle('off', !save.music); });
+
+  /* ---------- Звук: громкость музыки и эффектов (кнопка «Звук» в меню, на карте, в игре; ползунки и в паузе) ---------- */
+  var VOL = { music: { flag: 'music', v: 'vm', on: ICON.music, off: ICON.musicOff },
+              sfx: { flag: 'sfx', v: 'vs', on: ICON.sound, off: ICON.soundOff } };
+  document.querySelectorAll('[data-vol]').forEach(function (box) {
+    box.innerHTML = ['music', 'sfx'].map(function (k) {
+      return '<div class="vol-row" data-k="' + k + '"><button class="btn-round vol-ic" data-t-aria="' + k + '"></button>' +
+        '<div class="vol-main"><div class="vol-head"><span data-t="' + k + '"></span><b class="vol-val"></b></div>' +
+        '<input type="range" min="0" max="100" step="1" data-t-aria="' + k + '"></div></div>';
+    }).join('');
+  });
+  function audible(k) { return save[VOL[k].flag] && save[VOL[k].v] > 0; }
+  function applyAudio() {
+    S.setVolume('music', save.vm); S.setVolume('sfx', save.vs);
+    S.setMusic(save.music); S.setSfx(save.sfx);
   }
+  function updateAudioUi(skip) {
+    document.querySelectorAll('.vol-row').forEach(function (row) {
+      var k = row.getAttribute('data-k'), c = VOL[k], on = audible(k), pct = Math.round(save[c.v] * 100);
+      var ic = row.querySelector('.vol-ic'), r = row.querySelector('input');
+      setIcon(ic, on ? c.on : c.off); ic.classList.toggle('off', !on); row.classList.toggle('off', !on);
+      if (r !== skip) r.value = pct;
+      r.style.setProperty('--p', pct + '%');
+      row.querySelector('.vol-val').textContent = on ? pct + '%' : T('off');
+    });
+    var any = audible('music') || audible('sfx');
+    ['btn-audio', 'btn-audio-map', 'btn-audio-game'].forEach(function (id) { setIcon($(id), any ? ICON.sound : ICON.soundOff); $(id).classList.toggle('off', !any); });
+  }
+  document.addEventListener('click', function (e) { // значок слева от ползунка — выключить/включить
+    var ic = e.target.closest('.vol-ic'); if (!ic) return;
+    var c = VOL[ic.parentNode.getAttribute('data-k')];
+    save[c.flag] = !audible(ic.parentNode.getAttribute('data-k'));
+    if (save[c.flag] && save[c.v] === 0) save[c.v] = 0.5;
+    applyAudio(); updateAudioUi(); persist(); S.play('click');
+  });
+  document.addEventListener('input', function (e) { // ползунок: громкость сразу слышна
+    var r = e.target; if (!r.matches || !r.matches('.vol-row input')) return;
+    var c = VOL[r.closest('.vol-row').getAttribute('data-k')];
+    save[c.v] = Math.round(r.value) / 100;
+    if (save[c.v] > 0) save[c.flag] = true;
+    applyAudio(); updateAudioUi(r);
+  });
+  document.addEventListener('change', function (e) { // отпустили ползунок: сохранить, у эффектов — образец звука
+    var r = e.target; if (!r.matches || !r.matches('.vol-row input')) return;
+    persist(); if (r.closest('.vol-row').getAttribute('data-k') === 'sfx') S.play('found');
+  });
+  function openSound() { modal('modal-sound', true); }
 
   /* ---------- Ежедневный подарок ---------- */
   function giftAvailable() { return save.gift.date !== today(); }
@@ -571,10 +616,9 @@
   on('btn-fav', function () { P.social.favorites().then(closeFav); });
   on('btn-home', function () { P.social.homeScreen().then(closeFav); });
   on('btn-fav-later', closeFav);
-  function toggleSfx() { save.sfx = !save.sfx; S.setSfx(save.sfx); updateToggles(); persist(); }
-  function toggleMusic() { save.music = !save.music; S.setMusic(save.music); updateToggles(); persist(); }
-  on('btn-sound', toggleSfx); on('btn-sound2', toggleSfx); on('btn-music', toggleMusic); on('btn-music2', toggleMusic);
-  document.addEventListener('pointerdown', function () { S.unlock(); }, { once: true });
+  on('btn-audio', openSound); on('btn-audio-map', openSound); on('btn-audio-game', openSound);
+  on('btn-sound-ok', function () { modal('modal-sound', false); });
+  $('modal-sound').addEventListener('click', function (e) { if (e.target === this) modal('modal-sound', false); });
   document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   document.addEventListener('dblclick', function (e) { e.preventDefault(); });
@@ -599,11 +643,12 @@
     var best = null;
     (list || []).forEach(function (s) { if (score(s) > score(best)) best = s; });
     save = sanitize(best);
-    S.setSfx(save.sfx); S.setMusic(save.music);
+    applyAudio(); updateAudioUi();
     $('menu-art').innerHTML = menuArt();
     refreshMenu();
     setTimeout(function () {
       show('scr-menu'); P.gameReady();
+      S.preload(); // звук грузится сразу; музыка — с открытия, если браузер разрешит, иначе с первого касания
       if (giftAvailable()) setTimeout(function () { if (current === 'scr-menu' && !anyModal()) openGift(); }, 350);
       setTimeout(function () { if (!$('map-svg')) buildMap(); }, 300);
     }, Math.max(0, 1200 - (Date.now() - t0)));

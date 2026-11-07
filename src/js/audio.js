@@ -1,6 +1,8 @@
 /* Звук только из файлов (assets/sfx, assets/music; ogg или mp3 — что поддерживает браузер). Синтеза звука в коде нет.
-   Музыка грузится после старта, играет бесшовным циклом (AudioBufferSourceNode.loop с точными границами петли)
-   и тише эффектов.
+   Всё грузится сразу, как только показано меню (Sound.preload): если браузер разрешает звук без касания, музыка
+   играет с открытия игры, иначе — с первого касания в любом месте (без задержки: файлы уже загружены).
+   Музыка — бесшовный цикл (AudioBufferSourceNode.loop с точными границами петли). Громкость музыки и эффектов
+   настраивается отдельно (Sound.setVolume), выключение — Sound.setMusic / Sound.setSfx.
    Тишина — по «причинам» (hide, ad, platform, audio): Sound.suspend(why) / Sound.restore(why). Повтор одной и той же
    причины не накапливается, поэтому лишнее событие платформы не оставит игру без звука. Когда причин не осталось,
    музыка продолжает с того же места. Сторож (касание, возврат на вкладку, раз в 1,5 с) поднимает звук,
@@ -9,12 +11,21 @@
   'use strict';
   var SFX = ['click', 'found', 'miss', 'win', 'star', 'gift'];
   var MUSIC = 'winter', MUSIC_LOOP = 80; // длина петли в секундах (tools/make-audio.py)
-  var VOL_SFX = 0.8, VOL_MUSIC = 0.4, FADE_IN = 1.2;
+  var MAX_SFX = 1, MAX_MUSIC = 0.8, FADE_IN = 1.2; // громкость = максимум × положение ползунка²
+  var volSfx = 0.9, volMusic = 0.7;
   var ext = (function () { var a = document.createElement('audio'); return a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'mp3'; })();
 
   var ctx = null, sfxBus, musicBus, musicFade, buffers = {}, musicSrc = null, musicBuf = null, loopA = 0, loopB = 0;
   var musicT0 = 0, musicPos = 0; // позиция внутри петли, чтобы продолжать с того же места
   var sfxOn = true, musicOn = true, reasons = {}, unlocked = false, loadStarted = false;
+  function gSfx() { return sfxOn ? MAX_SFX * volSfx * volSfx : 0; }
+  function gMusic() { return musicOn ? MAX_MUSIC * volMusic * volMusic : 0; }
+  function setGain(node, v, smooth) { // музыка — плавно (без треска при движении ползунка), эффекты — сразу
+    if (!node) return;
+    var g = node.gain, t = ctx.currentTime;
+    g.cancelScheduledValues(t);
+    if (smooth && ctx.state === 'running') g.setTargetAtTime(v, t, 0.03); else g.value = v;
+  }
   var fallback = {}; // HTMLAudio, если WebAudio/загрузка недоступны (например, file://)
 
   function quiet(p) { if (p && p.then) p.then(null, function () {}); return p; }
@@ -25,8 +36,8 @@
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     try { ctx = new AC(); } catch (e) { return null; }
-    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxOn ? VOL_SFX : 0; sfxBus.connect(ctx.destination);
-    musicBus = ctx.createGain(); musicBus.gain.value = musicOn ? VOL_MUSIC : 0; musicBus.connect(ctx.destination);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = gSfx(); sfxBus.connect(ctx.destination);
+    musicBus = ctx.createGain(); musicBus.gain.value = gMusic(); musicBus.connect(ctx.destination);
     musicFade = ctx.createGain(); musicFade.gain.value = 0; musicFade.connect(musicBus);
     return ctx;
   }
@@ -48,12 +59,9 @@
     SFX.forEach(function (n) {
       fetchBuf(url('sfx', n)).then(function (b) { buffers[n] = b; }, function () { fallback[n] = new Audio(url('sfx', n)); });
     });
-    // музыка — после эффектов, с задержкой, чтобы не мешать старту
-    setTimeout(function () {
-      fetchBuf(url('music', MUSIC)).then(function (b) { musicBuf = b; findLoop(b); startMusic(); }, function () {
-        var a = new Audio(url('music', MUSIC)); a.loop = true; a.volume = VOL_MUSIC; fallback.music = a; startMusic();
-      });
-    }, 1200);
+    fetchBuf(url('music', MUSIC)).then(function (b) { musicBuf = b; findLoop(b); startMusic(); }, function () {
+      var a = new Audio(url('music', MUSIC)); a.loop = true; a.volume = gMusic(); fallback.music = a; startMusic();
+    });
   }
 
   function play(name, rate) {
@@ -64,7 +72,7 @@
       if (rate) s.playbackRate.value = rate;
       s.connect(sfxBus); s.start();
     } else if (fallback[name]) {
-      try { var a = fallback[name].cloneNode(); a.volume = VOL_SFX; if (rate) a.playbackRate = rate; a.play().catch(function () {}); } catch (e) {}
+      try { var a = fallback[name].cloneNode(); a.volume = Math.min(1, gSfx()); if (rate) a.playbackRate = rate; a.play().catch(function () {}); } catch (e) {}
     }
   }
   function fadeIn() {
@@ -72,8 +80,8 @@
     g.cancelScheduledValues(t); g.setValueAtTime(0, t); g.linearRampToValueAtTime(1, t + FADE_IN);
   }
   function startMusic() {
-    if (!musicOn || blocked() || !unlocked) return;
-    if (musicBuf && ctx) {
+    if (!musicOn || blocked()) return;
+    if (musicBuf && ctx) { // в остановленном контексте источник ждёт и зазвучит с первым касанием
       if (musicSrc) return; // уже играет (на паузе контекста — продолжит сам)
       var len = loopB - loopA;
       musicSrc = ctx.createBufferSource(); musicSrc.buffer = musicBuf; musicSrc.loop = true;
@@ -82,7 +90,7 @@
       musicSrc.start(0, loopA + (musicPos % len));
       musicT0 = ctx.currentTime - (musicPos % len);
       fadeIn();
-    } else if (fallback.music && fallback.music.paused) { fallback.music.play().catch(function () {}); }
+    } else if (fallback.music && fallback.music.paused && unlocked) { quiet(fallback.music.play()); }
   }
   function stopMusic() { // только при выключении музыки; на паузах источник остаётся, стоит вместе с контекстом
     if (musicSrc) {
@@ -100,8 +108,9 @@
       if (fallback.music) fallback.music.pause();
       return;
     }
-    if (!unlocked) return;
     if (ctx && ctx.state !== 'running') {
+      if (!unlocked && !tryAutoplay) return; // до первого касания — только одна попытка автозапуска (Sound.preload)
+      tryAutoplay = false;
       var r = ctx.resume();
       if (r && r.then) r.then(function () {
         if (blocked()) { quiet(ctx.suspend()); return; } // пока поднимали, снова началась пауза
@@ -109,9 +118,15 @@
       }, function () {}); else startMusic();
     } else startMusic();
   }
-  // Сторож: браузер мог остановить звук сам (iOS после рекламы/сворачивания, звонок, другое приложение)
+  var tryAutoplay = false;
+  // Любое касание разблокирует звук. На телефоне браузер считает разрешением только окончание касания
+  // (touchend/pointerup/click), поэтому слушаем все такие события, а не только pointerdown.
+  // Это же сторож: браузер мог остановить звук сам (iOS после рекламы/сворачивания, звонок, другое приложение).
+  function gesture() { if (!unlocked) Sound.unlock(); else kick(); }
   function kick() { if (unlocked && !blocked()) apply(); }
-  ['pointerdown', 'touchend', 'keydown'].forEach(function (t) { document.addEventListener(t, kick, { capture: true, passive: true }); });
+  ['pointerdown', 'pointerup', 'touchend', 'mousedown', 'click', 'keydown'].forEach(function (t) {
+    document.addEventListener(t, gesture, { capture: true, passive: true });
+  });
   window.addEventListener('focus', kick);
   window.addEventListener('pageshow', kick);
   document.addEventListener('visibilitychange', function () {
@@ -125,7 +140,9 @@
   var Sound = window.Sound = {
     ext: ext,
     play: play,
-    unlock: function () { // первое касание
+    // сразу после показа меню: загрузить всё и попробовать включить музыку без касания (если браузер разрешит)
+    preload: function () { if (!ensure()) return; loadAll(); tryAutoplay = true; apply(); },
+    unlock: function () { // касание
       if (!ensure()) return;
       unlocked = true; loadAll(); apply();
     },
@@ -133,14 +150,22 @@
     suspend: function (why) { reasons[why || 'misc'] = true; apply(); },
     // единая функция «восстановить звук»: после любой рекламы и после возврата из свёрнутого состояния
     restore: function (why) { delete reasons[why || 'misc']; apply(); },
-    setSfx: function (on) { sfxOn = on; if (sfxBus) sfxBus.gain.value = on ? VOL_SFX : 0; },
+    setSfx: function (on) { sfxOn = on; setGain(sfxBus, gSfx()); },
     setMusic: function (on) {
-      musicOn = on; if (musicBus) musicBus.gain.value = on ? VOL_MUSIC : 0;
+      musicOn = on; setGain(musicBus, gMusic(), true);
+      if (fallback.music) fallback.music.volume = Math.min(1, gMusic());
       if (on) startMusic(); else stopMusic();
+    },
+    // громкость 0…1 (положение ползунка): 'music' или 'sfx'
+    setVolume: function (kind, v) {
+      v = Math.max(0, Math.min(1, +v || 0));
+      if (kind === 'music') { volMusic = v; setGain(musicBus, gMusic(), true); if (fallback.music) fallback.music.volume = Math.min(1, gMusic()); }
+      else { volSfx = v; setGain(sfxBus, gSfx()); }
     },
     get blocked() { return blocked(); },
     get state() { // для тестов
       return { ctx: ctx ? ctx.state : 'none', music: !!musicSrc || !!(fallback.music && !fallback.music.paused),
+        gain: { music: musicBus ? musicBus.gain.value : gMusic(), sfx: sfxBus ? sfxBus.gain.value : gSfx() }, unlocked: unlocked,
         reasons: Object.keys(reasons), loop: [loopA, loopB], t: ctx ? ctx.currentTime : 0 };
     }
   };
