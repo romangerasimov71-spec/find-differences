@@ -4,6 +4,7 @@ const BASE = process.env.BASE || 'http://localhost:8123/index.html';
 async function run(b, query, label) {
   const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   await p.addInitScript(() => {
+    window.__storyUrl = 'https://example.test/share/story.png'; // история требует https
     const calls = [], subs = [], store = {};
     const mock = {
       send(m, d) {
@@ -29,6 +30,7 @@ async function run(b, query, label) {
   ok(c[0].startsWith('VKWebAppInit'), 'первый вызов — VKWebAppInit');
   ok(c.some(x => x.startsWith('VKWebAppStorageGet')), 'облачное сохранение читается');
   ok(await p.evaluate(() => window.Platform.id) === label, 'площадка определена как ' + label);
+  ok(c.some(x => x.startsWith('VKWebAppShowBannerAd') && x.includes('"layout_type":"resize"')), 'баннер в меню (снизу, окно ужимается)');
   if (await p.isVisible('#modal-gift.show')) { await p.click('#btn-gift-x2'); await p.waitForTimeout(600); }
   ok(await p.evaluate(() => window.__game.save.hints) === 5, 'подарок дня ×2 за рекламу (+2 к 3 подсказкам)');
   const solve = async (n) => {
@@ -40,6 +42,7 @@ async function run(b, query, label) {
   };
   await solve(1); await p.waitForTimeout(900);
   c = await calls();
+  ok(c.some(x => x.startsWith('VKWebAppHideBannerAd')), 'баннер скрывается в игре');
   ok(c.some(x => x.startsWith('VKWebAppStorageSet')), 'прогресс пишется в VK Storage');
   ok(c.some(x => x.includes(label === 'ok' ? 'fd_ny_ok' : 'fd_ny_vk')), 'ключ сохранения отдельный для ' + label);
   await p.click('#btn-next'); await p.waitForTimeout(400);
@@ -70,8 +73,16 @@ async function run(b, query, label) {
   c = await calls();
   const inv = c.find(x => x.startsWith('VKWebAppShowInviteBox'));
   ok(inv && (label === 'vk' || inv.includes('message')), 'приглашение друзей' + (label === 'ok' ? ' с message' : ''));
-  await solve(5); await p.click('#btn-share'); await p.click('#btn-share-wall'); await p.waitForTimeout(200);
+  await solve(5);
+  const h0 = await p.evaluate(() => window.__game.save.hints);
+  await p.click('#btn-share'); await p.click('#btn-share-wall'); await p.waitForTimeout(300);
+  ok(await p.evaluate(() => window.__game.save.hints) === h0 + 2, 'награда за «Поделиться» +2 подсказки');
+  await p.click('#btn-share'); await p.click('#btn-share-story'); await p.waitForTimeout(300);
+  ok(await p.evaluate(() => window.__game.save.hints) === h0 + 2, 'награда за «Поделиться» — только раз в день');
   c = await calls();
+  const story = c.find(x => x.startsWith('VKWebAppShowStoryBox')) || '';
+  ok(story.includes('"background_type":"image"') && (label === 'vk' ? story.includes('vk.com/app54882213') : !story.includes('attachment')), 'история: картинка' + (label === 'vk' ? ' + ссылка на игру' : ', без ссылок (OK)'));
+  ok(label === 'vk' || !c.some(x => /vk\.com|https?:\/\/(?!localhost)/.test(x.replace(/"url":"https:\/\/example\.test\/share\/story\.png"/, ''))), 'в OK в вызовах моста нет внешних ссылок');
   ok(label === 'vk' ? c.some(x => x.startsWith('VKWebAppShowWallPostBox')) : c.some(x => x.startsWith('VKWebAppShare')) && !c.some(x => x.startsWith('VKWebAppShowWallPostBox')), 'поделиться: ' + (label === 'vk' ? 'стена' : 'VKWebAppShare'));
   ok(!c.some(x => /AddToFavorites|AddToHomeScreen |ShowLeaderBoardBox/.test(x)) || label === 'vk', 'в OK не вызываются неподдерживаемые методы');
   ok(errs.length === 0, 'ошибок на странице нет ' + JSON.stringify(errs));

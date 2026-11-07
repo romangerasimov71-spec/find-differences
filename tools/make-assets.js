@@ -42,25 +42,30 @@ document.getElementById('s').innerHTML=(function(){${draw}})();
   await render(PG, 'cover-1080x1920.png', 1080, 1920, tall('Spot the Difference', 'New Year', 'Find 4 differences!'));
   await render(VK, 'story-1080x1920.png', 1080, 1920, tall('Найди отличия', 'Новый год', 'Найдёшь 4 отличия?'));
 
-  // Скриншоты 600×1200 из реальной игры
+  // 4 скриншота 600×1200 из реальной игры: начало уровня, находки, победа, праздничный уровень
+  for (const f of fs.readdirSync(VK)) if (/^screen-/.test(f)) fs.unlinkSync(path.join(VK, f));
   const p = await b.newPage({ viewport: { width: 360, height: 720 }, deviceScaleFactor: 600 / 360 });
   await p.goto('http://localhost:8123/index.html'); await p.waitForSelector('#scr-menu.active'); await p.waitForTimeout(700);
   if (await p.isVisible('#modal-gift.show')) { await p.click('#btn-gift-take'); }
-  await p.waitForTimeout(2600);
-  await p.screenshot({ path: path.join(VK, 'screen-1-menu.png') });
-  await p.evaluate(() => { window.__game.save.unlocked = 12; [1,2,3,4,5,6,7,8,9,10,11].forEach(n => window.__game.save.stars[n] = n % 4 ? 3 : 2); window.__game.start(8); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { window.__game.save.unlocked = 31; for (let n = 1; n <= 30; n++) window.__game.save.stars[n] = n % 4 ? 3 : 2; window.__game.start(8); });
   await p.waitForTimeout(3000);
-  await p.screenshot({ path: path.join(VK, 'screen-2-game.png') });
-  const boxes = await p.evaluate(() => window.__game.state.lv.diffs.map(d => d.box));
-  const bx = await p.locator('#pic-b svg').boundingBox();
+  await p.screenshot({ path: path.join(VK, 'screen-1-game.png') });
+  let boxes = await p.evaluate(() => window.__game.state.lv.diffs.map(d => d.box));
+  let bx = await p.locator('#pic-b svg').boundingBox();
   const tap = async (r) => { await p.mouse.click(bx.x + (r.x0 + r.x1) / 2 * bx.width / 400, bx.y + (r.y0 + r.y1) / 2 * bx.height / 340); await p.waitForTimeout(400); };
   for (let i = 0; i < boxes.length - 2; i++) await tap(boxes[i]);
   await p.waitForTimeout(1000); await tap(boxes[boxes.length - 2]); await p.waitForTimeout(250);
-  await p.screenshot({ path: path.join(VK, 'screen-3-found.png') });
+  await p.screenshot({ path: path.join(VK, 'screen-2-found.png') });
   await tap(boxes[boxes.length - 1]); await p.waitForTimeout(1500);
-  await p.screenshot({ path: path.join(VK, 'screen-4-win.png') });
-  await p.click('#btn-win-menu'); await p.waitForTimeout(400); await p.click('#btn-levels'); await p.waitForTimeout(800);
-  await p.screenshot({ path: path.join(VK, 'screen-5-map.png') });
+  await p.screenshot({ path: path.join(VK, 'screen-3-win.png') });
+  await p.click('#btn-win-menu'); await p.waitForTimeout(300);
+  await p.evaluate(() => window.__game.start(30)); await p.waitForTimeout(3500);
+  boxes = await p.evaluate(() => window.__game.state.lv.diffs.map(d => d.box));
+  bx = await p.locator('#pic-b svg').boundingBox();
+  for (let i = 0; i < 3; i++) await tap(boxes[i]);
+  await p.waitForTimeout(900);
+  await p.screenshot({ path: path.join(VK, 'screen-4-festive.png') });
   await b.close();
   for (const d of [VK, PG]) console.log(fs.readdirSync(d).map(f => f + ' ' + Math.round(fs.statSync(path.join(d, f)).size / 1024) + 'K').join('  '));
 })();

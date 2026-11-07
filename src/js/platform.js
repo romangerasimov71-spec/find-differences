@@ -4,6 +4,7 @@
 (function () {
   'use strict';
   var BRIDGE_TIMEOUT = 2500, AD_TIMEOUT = 45000;
+  var APP_ID = 54882213, APP_URL = 'https://vk.com/app' + APP_ID; // ссылка на игру — только в VK (в OK ссылок, уводящих из OK, нет)
   var bridge = window.vkBridge || null;
   var q = new URLSearchParams(location.search);
   var vkPlatform = q.get('vk_platform') || '';
@@ -94,20 +95,31 @@
     });
   }
 
+  /* ---------- Баннер (VK и OK): только в меню, снизу, окно игры ужимается под него ---------- */
+  var bannerOn = false;
+  function banner(on) {
+    if (!inBridge || on === bannerOn) return;
+    bannerOn = on;
+    if (on) send('VKWebAppShowBannerAd', { banner_location: 'bottom', layout_type: 'resize' }, 5000).catch(function () { bannerOn = false; });
+    else send('VKWebAppHideBannerAd', {}).catch(function () {});
+  }
+
   /* ---------- Рост ---------- */
   var storyUrl = null;
-  try { storyUrl = new URL('share/story.png', location.href).href; } catch (e) {}
+  try { storyUrl = window.__storyUrl || new URL('share/story.png', location.href).href; } catch (e) {} // __storyUrl — для теста на http
   var social = {
     invite: function (msg) { return send('VKWebAppShowInviteBox', isOK ? { message: msg } : {}, 60000).then(function () { return true; }, function () { return false; }); },
     // VK: пост на стену; OK: VKWebAppShare (ShowWallPostBox в OK нет)
     share: function (msg) {
       if (isOK) return send('VKWebAppShare', {}, 60000).then(function () { return true; }, function () { return false; });
-      return send('VKWebAppShowWallPostBox', { message: msg }, 60000).then(function () { return true; }, function () { return false; });
+      return send('VKWebAppShowWallPostBox', { message: msg, attachments: APP_URL }, 60000).then(function () { return true; }, function () { return false; });
     },
     // История: только background_type image и url (так работает и в OK)
     story: function () {
       if (!storyUrl || !/^https:/.test(storyUrl)) return Promise.resolve(false);
-      return send('VKWebAppShowStoryBox', { background_type: 'image', url: storyUrl }, 60000).then(function () { return true; }, function () { return false; });
+      var p = { background_type: 'image', url: storyUrl };
+      if (!isOK) p.attachment = { type: 'url', url: APP_URL, text: 'go_to' };
+      return send('VKWebAppShowStoryBox', p, 60000).then(function () { return true; }, function () { return false; });
     },
     favorites: function () { return send('VKWebAppAddToFavorites', {}, 30000).then(function () { return true; }, function () { return false; }); },
     homeScreen: function () { return send('VKWebAppAddToHomeScreen', {}, 30000).then(function () { return true; }, function () { return false; }); },
@@ -123,6 +135,7 @@
     load: load, save: save,
     showInterstitial: function () { return showAd('interstitial'); },
     showRewarded: function () { return showAd('reward'); },
+    banner: banner,
     gameReady: function () {},
     audioAllowed: function () { return true; },
     haptic: function (kind) {

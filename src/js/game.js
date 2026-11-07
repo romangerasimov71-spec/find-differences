@@ -42,7 +42,7 @@
 
   /* ---------- Сохранение ---------- */
   var save;
-  function defaults() { return { v: 2, unlocked: 1, stars: {}, hints: CFG.startHints, sfx: true, music: true, vm: 0.7, vs: 0.9, last: 1, wins: 0, gift: { day: -1, date: '' }, inv: '', fav: 0, tipZoom: 0 }; }
+  function defaults() { return { v: 2, unlocked: 1, stars: {}, hints: CFG.startHints, sfx: true, music: true, vm: 0.7, vs: 0.9, last: 1, wins: 0, gift: { day: -1, date: '' }, inv: '', shr: '', fav: 0, tipZoom: 0 }; }
   function vol(v, d) { return typeof v === 'number' && v >= 0 && v <= 1 ? Math.round(v * 100) / 100 : d; }
   function sanitize(s) {
     var o = defaults();
@@ -55,7 +55,7 @@
     o.last = Math.max(1, Math.min(o.unlocked, s.last | 0 || o.unlocked));
     o.wins = s.wins | 0;
     if (s.gift && typeof s.gift.date === 'string') o.gift = { day: s.gift.day | 0, date: s.gift.date };
-    o.inv = typeof s.inv === 'string' ? s.inv : ''; o.fav = s.fav | 0; o.tipZoom = s.tipZoom | 0;
+    o.inv = typeof s.inv === 'string' ? s.inv : ''; o.shr = typeof s.shr === 'string' ? s.shr : ''; o.fav = s.fav | 0; o.tipZoom = s.tipZoom | 0;
     return o;
   }
   function score(s) { if (!s) return -1; var t = 0; for (var k in s.stars) t += s.stars[k]; return (s.unlocked | 0) * 1000 + t; }
@@ -68,6 +68,7 @@
   function show(id) {
     if (current === id) return;
     $(current).classList.remove('active'); $(id).classList.add('active'); current = id;
+    if (P.banner) P.banner(id === 'scr-menu'); // баннер VK/OK — только в меню
     snow.setActive(id !== 'scr-game');
     if (id === 'scr-game') layout();
   }
@@ -598,9 +599,12 @@
   on('btn-pause-menu', function () { modal('modal-pause', false); refreshMenu(); show('scr-menu'); });
   on('btn-next', next);
   on('btn-win-menu', function () { modal('modal-win', false); refreshMenu(); show('scr-menu'); });
-  on('btn-share', function () { modal('modal-share', true); });
-  on('btn-share-wall', function () { modal('modal-share', false); P.social.share(T('shareMsg', { n: G.n, s: G.stars })); });
-  on('btn-share-story', function () { modal('modal-share', false); P.social.story(); });
+  on('btn-share', function () { $('share-text').textContent = T(save.shr === today() ? 'shareText2' : 'shareText'); modal('modal-share', true); });
+  function shareReward(ok) { // награда за «Поделиться» — раз в день
+    if (ok && save.shr !== today()) { save.shr = today(); save.hints += 2; persist(); toast(T('shareReward')); S.play('gift'); }
+  }
+  on('btn-share-wall', function () { modal('modal-share', false); P.social.share(T('shareMsg', { n: G.n, s: G.stars })).then(shareReward); });
+  on('btn-share-story', function () { modal('modal-share', false); P.social.story().then(shareReward); });
   on('btn-share-close', function () { modal('modal-share', false); });
   on('btn-continue', continueAfterLose);
   on('btn-lose-restart', function () { modal('modal-lose', false); startLevel(G.n); });
