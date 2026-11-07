@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3a8f'/%3E%3Cpath d='M16 3l11 21H5z' fill='%2333b35a' stroke='%231d2b5c' stroke-width='2' stroke-linejoin='round'/%3E%3Crect x='13' y='24' width='6' height='5' fill='%23a8693a'/%3E%3Ccircle cx='13' cy='17' r='2' fill='%23e8423f'/%3E%3Ccircle cx='19' cy='20' r='2' fill='%23ffc233'/%3E%3C/svg%3E">
 <script src="js/vk-bridge.min.js"></script>
 <script src="js/platform.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=202611071012">
+<link rel="stylesheet" href="css/style.css?v=202611071041">
 </head>
 <body>
 <canvas id="snow" aria-hidden="true"></canvas>
@@ -33,8 +33,7 @@
       <button class="btn btn-red btn-big pulse" id="btn-play"><span data-t="play">Играть</span><small id="play-sub"></small></button>
       <button class="btn btn-blue" id="btn-levels" data-t="levels">Уровни</button>
       <div class="menu-row">
-        <button class="btn-round ic-sound" id="btn-sound" data-t-aria="sound"></button>
-        <button class="btn-round ic-music" id="btn-music" data-t-aria="music"></button>
+        <button class="btn-round ic-audio" id="btn-audio" data-t-aria="sound"></button>
         <button class="btn-round ic-gift" id="btn-gift" data-t-aria="giftTitle"><span class="dot" id="gift-dot"></span></button>
         <button class="btn-round ic-friends" id="btn-invite" data-t-aria="invite"></button>
       </div>
@@ -46,6 +45,7 @@
       <button class="btn-round ic-back" id="btn-map-back" data-t-aria="back"></button>
       <div class="bar-title" data-t="levels">Уровни</div>
       <div class="bar-stars"><span class="star-ic"></span><b id="total-stars">0</b></div>
+      <button class="btn-round ic-audio" id="btn-audio-map" data-t-aria="sound"></button>
     </header>
     <div class="map-scroll" id="map-scroll"><div class="map" id="map"></div></div>
   </section>
@@ -65,6 +65,7 @@
       <button class="btn-round ic-zoomout" id="btn-zoom-reset" data-t-aria="zoomReset" hidden></button>
     </div>
     <div class="game-bottom">
+      <button class="btn-round ic-audio" id="btn-audio-game" data-t-aria="sound"></button>
       <button class="btn btn-gold btn-hint" id="btn-hint"><span class="hint-ic"></span><span data-t="hint">Подсказка</span><span class="hint-badge" id="hint-badge"></span></button>
     </div>
     <div class="finger" id="finger" hidden></div>
@@ -92,13 +93,16 @@
 
   <div class="modal" id="modal-pause"><div class="card">
     <div class="card-ribbon" data-t="pause">Пауза</div>
-    <div class="toggles">
-      <button class="btn-round ic-sound" id="btn-sound2" data-t-aria="sound"></button>
-      <button class="btn-round ic-music" id="btn-music2" data-t-aria="music"></button>
-    </div>
+    <div class="vol" data-vol></div>
     <button class="btn btn-red btn-big" id="btn-resume" data-t="resume">Продолжить</button>
     <button class="btn btn-blue" id="btn-restart" data-t="restart">Заново</button>
     <button class="btn btn-blue" id="btn-pause-menu" data-t="menu">Меню</button>
+  </div></div>
+
+  <div class="modal" id="modal-sound"><div class="card">
+    <div class="card-ribbon" data-t="sound">Звук</div>
+    <div class="vol" data-vol></div>
+    <button class="btn btn-red btn-big" id="btn-sound-ok" data-t="done">Готово</button>
   </div></div>
 
   <div class="modal" id="modal-gift"><div class="card">
@@ -129,6 +133,6 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script src="js/game.min.js?v=202611071012"></script>
+<script src="js/game.min.js?v=202611071041"></script>
 </body>
 </html>
