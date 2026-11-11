@@ -17,7 +17,7 @@
       invite: 'Пригласить друзей', inviteMsg: 'Играю в «Найди отличия: Новый год» — присоединяйся!', inviteReward: 'Спасибо! +3 подсказки', shareReward: 'Спасибо, что поделились! +2 подсказки', shareText: 'Поделитесь результатом — +2 подсказки раз в день', shareText2: 'Поделитесь результатом с друзьями',
       share: 'Поделиться', shareWall: 'На стену', shareStory: 'В историю', shareMsg: 'Я прошёл уровень {n} в «Найди отличия: Новый год» на {s}★! Сможешь лучше?',
       favTitle: 'Нравится игра?', favText: 'Добавьте её, чтобы быстро возвращаться.', favAdd: 'В избранное', homeAdd: 'На главный экран', later: 'Позже',
-      locked: 'Сначала пройдите уровень {n}', close: 'Закрыть', stars: 'Звёзды', back: 'Назад', zoomReset: 'Сбросить приближение'
+      locked: 'Сначала пройдите уровень {n}', close: 'Закрыть', stars: 'Звёзды', back: 'Назад', support: 'Поддержка и новинки', zoomReset: 'Сбросить приближение'
     },
     en: {
       title1: 'Spot the Difference', title2: 'New Year', slogan: 'Cozy puzzles for the holidays',
@@ -34,7 +34,7 @@
       invite: 'Invite friends', inviteMsg: 'Play Spot the Difference: New Year with me!', inviteReward: 'Thanks! +3 hints', shareReward: 'Thanks for sharing! +2 hints', shareText: 'Share your result — +2 hints once a day', shareText2: 'Share your result with friends',
       share: 'Share', shareWall: 'Post', shareStory: 'Story', shareMsg: 'I beat level {n} in Spot the Difference: New Year with {s}★!',
       favTitle: 'Enjoying the game?', favText: 'Add it to come back faster.', favAdd: 'Add to favorites', homeAdd: 'Add to home screen', later: 'Later',
-      locked: 'Finish level {n} first', close: 'Close', stars: 'Stars', back: 'Back', zoomReset: 'Reset zoom'
+      locked: 'Finish level {n} first', close: 'Close', stars: 'Stars', back: 'Back', support: 'Support and news', zoomReset: 'Reset zoom'
     }
   };
   var lang = 'ru';

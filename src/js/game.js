@@ -644,6 +644,7 @@
   P.ready.then(function () {
     window.I18N.setLang(P.language || 'ru'); window.I18N.apply();
     document.title = T('title1') + ': ' + T('title2');
+    if (P.support) { $('support-line').textContent = T('support') + ': ' + P.support; $('support-line').hidden = false; }
     if (!P.audioAllowed()) S.suspend('audio'); // платформа запретила звук на старте (Playgama)
     return P.load();
   }).then(function (list) {
