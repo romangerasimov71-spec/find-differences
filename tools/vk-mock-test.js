@@ -30,6 +30,8 @@ async function run(b, query, label) {
   ok(c[0].startsWith('VKWebAppInit'), 'первый вызов — VKWebAppInit');
   ok(c.some(x => x.startsWith('VKWebAppStorageGet')), 'облачное сохранение читается');
   ok(await p.evaluate(() => window.Platform.id) === label, 'площадка определена как ' + label);
+  const sup = await p.evaluate(() => document.getElementById('support-line').textContent);
+  ok(sup.endsWith(': ' + (label === 'ok' ? 'ok.ru/group/70000061487179' : 'vk.com/club243202759')), 'строка поддержки «' + sup + '»');
   ok(c.some(x => x.startsWith('VKWebAppShowBannerAd') && x.includes('"layout_type":"resize"')), 'баннер в меню (снизу, окно ужимается)');
   if (await p.isVisible('#modal-gift.show')) { await p.click('#btn-gift-x2'); await p.waitForTimeout(600); }
   ok(await p.evaluate(() => window.__game.save.hints) === 5, 'подарок дня ×2 за рекламу (+2 к 3 подсказкам)');

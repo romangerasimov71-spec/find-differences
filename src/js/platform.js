@@ -4,9 +4,10 @@
 (function () {
   'use strict';
   var BRIDGE_TIMEOUT = 2500, AD_TIMEOUT = 45000;
-  // Канал поддержки (требование ВК): сообщество «Уютные игры». Показывается в окне «Звук» строкой
+  // Канал поддержки (требование ВК): группа студии «Уютные игры». Показывается в окне «Звук» строкой
   // «Поддержка и новинки: …» обычным текстом (без ссылки). Только в сборке VK/OK; пусто — строки нет.
-  var SUPPORT = 'vk.com/club243202759';
+  // В ОК — только группа ОК (ни vk.com, ни «ВКонтакте» — риск отказа ОК), во ВК и в браузере — сообщество ВК.
+  var SUPPORT_VK = 'vk.com/club243202759', SUPPORT_OK = 'ok.ru/group/70000061487179';
   var APP_ID = 54882213, APP_URL = 'https://vk.com/app' + APP_ID; // ссылка на игру — только в VK (в OK ссылок, уводящих из OK, нет)
   var bridge = window.vkBridge || null;
   var q = new URLSearchParams(location.search);
@@ -133,7 +134,7 @@
   };
 
   window.Platform = {
-    id: id, isOK: isOK, language: 'ru', ready: ready, support: SUPPORT,
+    id: id, isOK: isOK, language: 'ru', ready: ready, support: isOK ? SUPPORT_OK : SUPPORT_VK,
     caps: { invite: inBridge, share: inBridge, story: inBridge, favorites: id === 'vk', interstitialManaged: false, rewarded: true },
     load: load, save: save,
     showInterstitial: function () { return showAd('interstitial'); },
