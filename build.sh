@@ -5,7 +5,7 @@
 # Перед сборкой — автотест 100 уровней (нужен Playwright с Chromium).
 set -euo pipefail
 cd "$(dirname "$0")"
-node tools/test-levels.js | tail -1
+[ -n "${SKIP_LEVEL_TEST:-}" ] || node tools/test-levels.js | tail -1   # SKIP_LEVEL_TEST=1 — без автотеста (сборка APK в CI)
 rm -rf dist && mkdir -p dist
 STAMP=$(date -u +%Y%m%d%H%M)
 COMMON="src/js/i18n.js src/js/art.js src/js/bounds.js src/js/scenes.js src/js/levels.js src/js/audio.js src/js/game.js"

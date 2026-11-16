@@ -4,6 +4,10 @@
 (function () {
   'use strict';
   var BRIDGE_TIMEOUT = 2500, AD_TIMEOUT = 45000;
+  // Android-приложение (RuStore): WebView дописывает «FindDifferencesAndroid/<версия>» к user agent.
+  // Там нет VK Bridge, рекламы (ни межстраничной, ни за награду), строки поддержки и ссылок наружу;
+  // сохранение — localStorage WebView. В VK/OK/Playgama и в браузере признака нет — всё как было.
+  var ANDROID = /FindDifferencesAndroid\//.test((window.navigator && navigator.userAgent) || '');
   // Канал поддержки (требование ВК): сообщество «Уютные игры». Показывается в окне «Звук» строкой
   // «Поддержка и новинки: …» обычным текстом (без ссылки). Только в сборке VK/OK; пусто — строки нет.
   var SUPPORT = 'vk.com/club243202759';
@@ -12,9 +16,12 @@
   var q = new URLSearchParams(location.search);
   var vkPlatform = q.get('vk_platform') || '';
   var isOK = q.get('vk_client') === 'ok' || /_ok$/.test(vkPlatform);
-  var inBridge = !!(bridge && (q.has('vk_app_id') || q.has('vk_platform') || q.has('sign')));
-  var id = inBridge ? (isOK ? 'ok' : 'vk') : 'web';
-  var SAVE_KEY = id === 'ok' ? 'fd_ny_ok_v2' : id === 'vk' ? 'fd_ny_vk_v2' : 'fd_ny_web_v2'; // сохранения VK и OK раздельные
+  var inBridge = !ANDROID && !!(bridge && (q.has('vk_app_id') || q.has('vk_platform') || q.has('sign')));
+  var id = ANDROID ? 'android' : inBridge ? (isOK ? 'ok' : 'vk') : 'web';
+  var SAVE_KEY = id === 'ok' ? 'fd_ny_ok_v2' : id === 'vk' ? 'fd_ny_vk_v2' : id === 'android' ? 'fd_ny_android_v2' : 'fd_ny_web_v2'; // сохранения VK и OK раздельные
+  // язык Android-приложения — по языку телефона (ru/uk/be/kk → русский, иначе английский); в VK/OK — русский
+  var lang = 'ru';
+  if (ANDROID) lang = /^(ru|uk|be|kk)/i.test((navigator.languages && navigator.languages[0]) || navigator.language || 'ru') ? 'ru' : 'en';
 
   function withTimeout(p, ms) {
     return new Promise(function (res, rej) {
@@ -83,7 +90,7 @@
     });
   }
   function showAd(fmt) {
-    if (adBusy) return Promise.resolve(false);
+    if (ANDROID || adBusy) return Promise.resolve(false); // в приложении рекламы нет (и заглушки тоже)
     adBusy = true; adStart();
     var req = fmt === 'reward' ? { ad_format: fmt, use_waterfall: true } : { ad_format: fmt };
     var p = !inBridge ? stubAd() :
@@ -145,10 +152,17 @@
       if (inBridge && !isOK) {
         if (kind === 'tap') send('VKWebAppTapticImpactOccurred', { style: 'light' }).catch(function () {});
         else send('VKWebAppTapticNotificationOccurred', { type: kind === 'error' ? 'error' : 'success' }).catch(function () {});
-      } else if (navigator.vibrate) { try { navigator.vibrate(kind === 'error' ? 40 : 12); } catch (e) {} }
+      } else if (!ANDROID && navigator.vibrate) { /* в приложении нет разрешения VIBRATE — не трогаем */ try { navigator.vibrate(kind === 'error' ? 40 : 12); } catch (e) {} }
     },
     onPause: function (f) { pauseFns.push(f); }, onResume: function (f) { resumeFns.push(f); },
     isHidden: function () { return hidden; },
+    // Android: приложение свернули / развернули (MainActivity.onPause/onResume) — как сворачивание вкладки
+    appPause: function (on) { if (on) hide(); else show(); },
     social: social
   };
+  // Android-приложение: без строки поддержки, рекламы и бонусов за неё (кнопки «за рекламу» скрыты), язык — по телефону
+  if (ANDROID) {
+    var AP = window.Platform;
+    AP.support = ''; AP.language = lang; AP.noAds = true; AP.caps.rewarded = false;
+  }
 })();

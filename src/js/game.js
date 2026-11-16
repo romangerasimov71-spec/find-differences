@@ -1,6 +1,8 @@
 /* Основная логика: экраны, карта уровней, игровой процесс, зум, подсказки, подарки, реклама, рост. */
 (function () {
   'use strict';
+  // Версия игры: из неё берётся versionName Android-приложения (RuStore). Поднимать к каждой новой сборке для площадок.
+  var GAME_VERSION = '1.2.0';
   var A = window.ART, L = window.LEVELS, P = window.Platform, S = window.Sound, T = window.I18N.t;
   var OUT = A.OUT, PAL = A.PAL;
   var $ = function (id) { return document.getElementById(id); };
@@ -338,7 +340,7 @@
   }
   function updateHintBadge() {
     var b = $('hint-badge');
-    if (save.hints > 0) { b.textContent = save.hints; b.classList.remove('ad'); }
+    if (save.hints > 0 || P.noAds) { b.textContent = save.hints; b.classList.remove('ad'); } // в приложении — без значка рекламы
     else { b.innerHTML = ICON.ad; b.classList.add('ad'); }
   }
 
@@ -485,6 +487,7 @@
     if (!G || G.done || anyModal()) return;
     S.unlock(); hideFinger();
     if (save.hints > 0) { save.hints--; persist(); updateHintBadge(); revealHint(); S.play('click'); return; }
+    if (P.noAds) { S.play('miss'); toast(T('noHints')); return; } // Android: подсказки только бесплатные (старт, подарок дня)
     var btn = $('btn-hint'); btn.disabled = true;
     P.showRewarded().then(function (ok) {
       btn.disabled = false;
@@ -661,6 +664,34 @@
       setTimeout(function () { if (!$('map-svg')) buildMap(); }, 300);
     }, Math.max(0, 1200 - (Date.now() - t0)));
   });
+
+  /* ---------- Android-приложение: кнопка «Назад» и сворачивание ---------- */
+  // «Назад»: закрыть открытое окно / поставить игру на паузу / вернуться в меню; false — открыто меню, приложение выходит
+  function back() {
+    var m = anyModal();
+    if (m) {
+      switch (m.id) {
+        case 'modal-pause': modal('modal-pause', false); if (P.levelEvent && G) P.levelEvent('level_resumed', G.n); break;
+        case 'modal-win': modal('modal-win', false); refreshMenu(); show('scr-menu'); break;
+        case 'modal-lose': modal('modal-lose', false); refreshMenu(); show('scr-menu'); break;
+        case 'modal-fav': closeFav(); break;
+        default: modal(m.id, false);
+      }
+      return true;
+    }
+    if (current === 'scr-game') {
+      if (G && !G.done) { modal('modal-pause', true); if (P.levelEvent) P.levelEvent('level_paused', G.n); }
+      else { refreshMenu(); show('scr-menu'); }
+      return true;
+    }
+    if (current === 'scr-map') { refreshMenu(); show('scr-menu'); return true; }
+    return false;
+  }
+  window.FDGame = {
+    version: GAME_VERSION,
+    back: back,
+    appPause: function (on) { if (P.appPause) P.appPause(!!on); }
+  };
 
   window.__game = { start: startLevel, get state() { return G; }, get save() { return save; }, openMap: openMap, get view() { return view; } };
 })();
