@@ -4,10 +4,6 @@
 (function () {
   'use strict';
   var BRIDGE_TIMEOUT = 2500, AD_TIMEOUT = 45000;
-  // Android-приложение (RuStore): WebView дописывает «FindDifferencesAndroid/<версия>» к user agent.
-  // Там нет VK Bridge, рекламы (ни межстраничной, ни за награду), строки поддержки и ссылок наружу;
-  // сохранение — localStorage WebView. В VK/OK/Playgama и в браузере признака нет — всё как было.
-  var ANDROID = /FindDifferencesAndroid\//.test((window.navigator && navigator.userAgent) || '');
   // Канал поддержки (требование ВК): сообщество «Уютные игры». Показывается в окне «Звук» строкой
   // «Поддержка и новинки: …» обычным текстом (без ссылки). Только в сборке VK/OK; пусто — строки нет.
   var SUPPORT = 'vk.com/club243202759';
@@ -16,6 +12,10 @@
   var q = new URLSearchParams(location.search);
   var vkPlatform = q.get('vk_platform') || '';
   var isOK = q.get('vk_client') === 'ok' || /_ok$/.test(vkPlatform);
+  // Android-приложение (RuStore): WebView дописывает «FindDifferencesAndroid/<версия>» к user agent.
+  // Там нет VK Bridge, рекламы (ни межстраничной, ни за награду), строки поддержки и ссылок наружу;
+  // сохранение — localStorage WebView. В VK/OK/Playgama и в браузере признака нет — всё как было.
+  var ANDROID = /FindDifferencesAndroid\//.test((window.navigator && navigator.userAgent) || '');
   var inBridge = !ANDROID && !!(bridge && (q.has('vk_app_id') || q.has('vk_platform') || q.has('sign')));
   var id = ANDROID ? 'android' : inBridge ? (isOK ? 'ok' : 'vk') : 'web';
   var SAVE_KEY = id === 'ok' ? 'fd_ny_ok_v2' : id === 'vk' ? 'fd_ny_vk_v2' : id === 'android' ? 'fd_ny_android_v2' : 'fd_ny_web_v2'; // сохранения VK и OK раздельные
